@@ -53,3 +53,71 @@ export const registerUser = asyncHandler(async(req, res) => {
             .json(new ApiError(500, `Internal Server Error: ${error}`));
     }
 })
+
+export const loginUser = asyncHandler(async(req, res) => {
+    try {
+        const { email, password } = req.body;
+        
+        if(!email || !password) {
+            throw new ApiError(400, "Email and password are required");
+        }
+
+        const [users] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
+        if (users.length === 0) {
+            throw new ApiError(400, "Invalid email or password");
+        }
+
+        const user = users[0];
+
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) {
+            throw new ApiError(400, "Invalid email or password");
+        }
+
+        const tokenPayload = {
+            id: user.id,
+            email: user.email,
+            role: user.role
+        };
+
+        const accessToken = generateToken(tokenPayload);
+        const refreshToken = generateRefreshToken(tokenPayload);
+
+        await pool.query("UPDATE users SET refresh_token = ? WHERE id = ?", [refreshToken, user.id]);
+
+        delete user.password;
+        delete user.refresh_token;
+
+        return res
+            .status(200)
+            .json({
+                status: "success",
+                data: {
+                    user,
+                    accessToken,
+                    refreshToken
+                }
+                });
+
+    } catch (error) {
+        console.log("Error while logging in user: ", error);
+        return res
+            .status(500)
+            .json(new ApiError(500, `Internal Server Error: ${error}`));
+    }
+})
+
+export const logout = asyncHandler(async(req, res) => {
+    try {
+        const userId = req.user.id;
+        await pool.query("UPDATE users SET refresh_token = NULL where id = ?", [userId]);
+        return res
+            .status(200)
+            .json(new ApiResponse(200, null, "User logged out successfully"));
+    } catch (error) {
+        console.log("Error while logging out: ", error);
+        return res
+            .status(500)
+            .json(new ApiError(500, `Internal Server Error: ${error}`));
+    }
+})
