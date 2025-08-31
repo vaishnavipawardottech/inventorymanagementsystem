@@ -8,9 +8,9 @@ import {v4 as uuidv4} from "uuid";
 
 export const registerUser = asyncHandler(async(req, res) => {
     try {
-        const {name, email, password, role} = req.body;
+        const {username, email, password, role} = req.body;
 
-        if ([name, email, password].some((field) => !field || field.trim() === "")) {
+        if ([username, email, password].some((field) => !field || field.trim() === "")) {
             throw new ApiError(400, "All fields are required");
         }
 
@@ -33,12 +33,12 @@ export const registerUser = asyncHandler(async(req, res) => {
         }
 
         const [result] = await pool.query(
-            `INSERT INTO users (name, email, password, refresh_token, role) VALUES(?, ?, ?, ?, ?)`, 
-            [name, email, hashedPassword, "", userRole]
+            `INSERT INTO users (username, email, password, refresh_token, role) VALUES(?, ?, ?, ?, ?)`, 
+            [username, email, hashedPassword, "", userRole]
         )
 
         const [createdUser] = await pool.query(
-            "SELECT id, name, email, role, created_at FROM users WHERE id = ?",
+            "SELECT id, username, email, role, created_at FROM users WHERE id = ?",
             [result.insertId]
         )
 
