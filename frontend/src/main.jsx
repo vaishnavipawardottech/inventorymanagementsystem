@@ -8,6 +8,10 @@ import LoginForm from './components/Auth/LoginForm.jsx';
 import RegisterForm from './components/Auth/RegisterForm.jsx'
 import HomeLayout from './HomeLayout.jsx';
 import Home from './components/Home/Home.jsx';
+import MainLayout from './MainLayout.jsx'
+import Dashboard from './components/Dashboard/Dashboard.jsx'
+import Products from './components/Products/Products.jsx'
+import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute.jsx'
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -18,6 +22,12 @@ const router = createBrowserRouter(
       </Route>
       <Route path='/' element={<HomeLayout />}>
         <Route index element={<Home />}/>
+      </Route>
+      <Route path='' element={<MainLayout />}>
+        <Route path='dashboard' element={<Dashboard />} />
+        <Route path='products' element={
+          <Products />
+          } />
       </Route>
     </>
   )

@@ -22,9 +22,9 @@ function Home() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <main className="flex-1 mt-20">
+      <main className="flex-1 mt-10">
         {/* Hero */}
-        <section className="bg-gray-50 py-20">
+        {/* <section className="bg-gray-50 py-20">
           <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-10 items-center">
             <div>
               <h2 className="text-4xl font-bold text-gray-900 leading-tight">
@@ -55,7 +55,40 @@ function Home() {
               />
             </div>
           </div>
+        </section> */}
+
+        {/* Hero */}
+        <section className="bg-gray-50 py-24">
+          <div className="max-w-4xl mx-auto px-6 text-center">
+            {/* Heading */}
+            <h2 className="text-5xl mt-10 font-bold text-[#0a1a44] leading-tight">
+              Manage Your Inventory Effortlessly with us
+            </h2>
+
+            {/* Subtext */}
+            <p className="mt-6 text-lg text-black">
+              Track inventory, manage orders, and grow your business with ease. <br />
+              Stay on top of your sales and purchases.
+            </p>
+
+            {/* Buttons */}
+            <div className="mt-8 flex justify-center gap-4">
+              <Link
+                to="/register"
+                className="px-6 py-3 rounded-md bg-purple-700 hover:bg-purple-800 text-white font-semibold transition"
+              >
+                Get Started
+              </Link>
+              <Link
+                to="/login"
+                className="px-6 py-3 rounded-md border border-gray-300 text-gray-700 hover:bg-purple-200 font-medium transition"
+              >
+                Login
+              </Link>
+            </div>
+          </div>
         </section>
+
 
         {/* Features */}
         <section id="features" className="py-20 bg-white">
@@ -117,7 +150,7 @@ function Home() {
 
             {/* Contact Form */}
             <div className="bg-white text-gray-900 rounded-xl shadow-lg p-8 w-full max-w-md">
-              <h3 className="text-2xl font-bold mb-6 text-indigo-600">Get in Touch</h3>
+              <h3 className="text-2xl font-bold mb-6 text-black">Get in Touch</h3>
               <form className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Name</label>
@@ -145,7 +178,7 @@ function Home() {
                 </div>
                 <button
                   type="submit"
-                  className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 transition"
+                  className="w-full bg-purple-700 text-white py-2 px-4 rounded-md hover:bg-purple-800 transition"
                 >
                   Send Message
                 </button>

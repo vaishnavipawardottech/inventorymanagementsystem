@@ -28,7 +28,7 @@ export const registerUser = asyncHandler(async(req, res) => {
             userRole = "admin";
         }
 
-        if(role && role === "admin" && countRows[0].count === 0) {
+        if(role && role === "admin" || countRows[0].count === 0) {
             userRole = "admin";
         }
 
@@ -38,7 +38,7 @@ export const registerUser = asyncHandler(async(req, res) => {
         )
 
         const [createdUser] = await pool.query(
-            "SELECT id, username, email, role, created_at FROM users WHERE id = ?",
+            "SELECT id, username, email, role, created_at, updated_at, deleted_at FROM users WHERE id = ?",
             [result.insertId]
         )
 
@@ -83,10 +83,27 @@ export const loginUser = asyncHandler(async(req, res) => {
         const accessToken = generateToken(tokenPayload);
         const refreshToken = generateRefreshToken(tokenPayload);
 
+        const cookieOptions = {
+            httpOnly: true,     // not accessible by JS (prevents XSS)
+            secure: process.env.NODE_ENV === "production", // only https in prod
+            sameSite: "strict",      // prevents CSRF
+        }
+
         await pool.query("UPDATE users SET refresh_token = ? WHERE id = ?", [refreshToken, user.id]);
 
         delete user.password;
         delete user.refresh_token;
+
+        // Set cookies
+        res.cookie("accessToken", accessToken, {
+        ...cookieOptions,
+        maxAge: 24 * 60 * 60 * 1000, // 1 day
+        });
+
+        res.cookie("refreshToken", refreshToken, {
+        ...cookieOptions,
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        });
 
         return res
             .status(200)
@@ -111,6 +128,10 @@ export const logout = asyncHandler(async(req, res) => {
     try {
         const userId = req.user.id;
         await pool.query("UPDATE users SET refresh_token = NULL where id = ?", [userId]);
+
+        res.clearCookie("accessToken", { path: "/" });
+        res.clearCookie("refreshToken", { path: "/" });
+
         return res
             .status(200)
             .json(new ApiResponse(200, null, "User logged out successfully"));
@@ -119,5 +140,44 @@ export const logout = asyncHandler(async(req, res) => {
         return res
             .status(500)
             .json(new ApiError(500, `Internal Server Error: ${error}`));
+    }
+})
+
+export const refreshAccessToken = asyncHandler(async (req, res) => {
+    try {
+        const {refreshToken} = req.cookies;
+        if (!refreshToken) {
+            throw new ApiError(401, "Refresh token not provided");
+        }
+
+        const decoded = verifyRefreshToken(refreshToken);
+
+        const [users] = await pool.query(
+            `SELECT * FROM users WHERE id = ?`, [decoded.id]
+        )
+
+        if (users.length === 0 || users[0].refresh_token !== refreshToken) {
+            throw new ApiError(401, "Invalid refresh token");
+        }
+
+        const newAccessToken = generateToken({
+            id: users[0].id,
+            email: users[0].email,
+            role: users[0].role
+        })
+
+        res.cookie("accessToken", newAccessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            maxAge: 24 * 60 * 60 * 1000 // 1 day
+        });
+
+        return res
+            .status(200)
+            .json(new ApiResponse(200, { accessToken: newAccessToken }, "Access token refreshed successfully"));
+        
+    } catch (error) {
+        throw new ApiError(401, "Could not refresh token");
     }
 })

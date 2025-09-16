@@ -15,7 +15,7 @@ function LoginForm() {
     e.preventDefault();
 
     try {
-      const response = await axios.post('/api/v1/login', {email, password});
+      const response = await axios.post('/api/v1/login', {email, password}, { withCredentials: true });
       const accessToken = response.data?.data?.accessToken;
       const username = response.data?.data?.user?.username;
       const owner = response.data?.data?.user?._id;
@@ -23,13 +23,13 @@ function LoginForm() {
       const role = response.data?.data?.user?.role;
 
       if (accessToken) {
-        localStorage.setItem('accessToken', accessToken);
-        localStorage.setItem('username', username);
-        localStorage.setItem('owner', owner);
-        localStorage.setItem('useremail', useremail);
-        localStorage.setItem('role', role);
-        console.log("Login successful");
-        navigate('/');
+        // localStorage.setItem('accessToken', accessToken);
+        // localStorage.setItem('username', username);
+        // localStorage.setItem('owner', owner);
+        // localStorage.setItem('useremail', useremail);
+        // localStorage.setItem('role', role);
+        // console.log("Login successful");
+        navigate('/dashboard');
       }
     } catch (error) {
       console.log("Error logging in: ", error);

@@ -53,6 +53,7 @@ const createTable = async() => {
                 stock VARCHAR(100) DEFAULT "0",
                 min_stock VARCHAR(100) DEFAULT "0",
                 image_url VARCHAR(255),
+                stock_status ENUM('in_stock', 'out_of_stock', 'low_stock') DEFAULT 'in_stock',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 deleted_at TIMESTAMP DEFAULT NULL

@@ -6,7 +6,7 @@ function Footer() {
     <footer className="bg-gray-900 text-gray-300 py-10">
         <div className="max-w-7xl mx-auto px-6 flex flex-row justify-center gap-24">
           <div>
-            <h4 className="font-semibold text-white text-2xl">InventoPro</h4>
+            <h4 className="font-bold text-white text-4xl">Inventory</h4>
             <p className="mt-2 text-sm">Smart Inventory for Smart Businesses</p>
           </div>
           <div>
@@ -29,9 +29,9 @@ function Footer() {
             </div>
           </div>
         </div>
-        {/* <div className="mt-10 text-center text-sm text-gray-500">
-          © 2025 Inventory. All rights reserved.
-        </div> */}
+        <div className="mt-10 text-center text-sm text-gray-500">
+          © 2025, Inventory Corporation Pvt. Ltd. All Rights Reserved.
+        </div>
       </footer>
   )
 }
