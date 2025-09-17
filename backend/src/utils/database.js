@@ -21,7 +21,7 @@ const createTable = async() => {
             `CREATE TABLE IF NOT EXISTS customers(
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 name VARCHAR(150) NOT NULL,
-                phone VARCHAR(20),
+                phone VARCHAR(20) NOT NULL,
                 address TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -115,6 +115,7 @@ const createTable = async() => {
                 product_id INT NOT NULL,
                 quantity INT NOT NULL,
                 price DECIMAL(10, 2) NOT NULL,
+                deleted_at TIMESTAMP DEFAULT NULL,
                 FOREIGN KEY (sale_id) REFERENCES sales(id) ON DELETE CASCADE,
                 FOREIGN KEY (product_id) REFERENCES products(id)
             );`
