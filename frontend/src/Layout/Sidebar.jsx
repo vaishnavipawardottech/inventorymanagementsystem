@@ -18,9 +18,13 @@ function Sidebar() {
                     <Box className='h-5 w-5 text-gray-600'/>
                     <span className="text-black font-normal">Products</span>
                 </NavLink>
-                <NavLink to="/orders" className={linkClasses}>
+                {/* <NavLink to="/orders" className={linkClasses}>
                     <ClipboardList className='h-5 w-5 text-gray-600'/>
                     <span className="text-black font-normal">Orders</span>
+                </NavLink> */}
+                <NavLink to="/sales" className={linkClasses}>
+                    <CircleDollarSign className='h-5 w-5 text-gray-600'/>
+                    <span className="text-black font-normal">Sales</span>
                 </NavLink>
                 <NavLink to="/suppliers" className={linkClasses}>
                     <Users className='h-5 w-5 text-gray-600'/>
@@ -29,10 +33,6 @@ function Sidebar() {
                 <NavLink to="/purchases" className={linkClasses}>
                     <ShoppingCart className='h-5 w-5 text-gray-600'/>
                     <span className="text-black font-normal">Purchases</span>
-                </NavLink>
-                <NavLink to="/sales" className={linkClasses}>
-                    <CircleDollarSign className='h-5 w-5 text-gray-600'/>
-                    <span className="text-black font-normal">Sales</span>
                 </NavLink>
                 <NavLink to="/logout" className={linkClasses}>
                     <LogOut className='h-5 w-5 text-gray-600'/>

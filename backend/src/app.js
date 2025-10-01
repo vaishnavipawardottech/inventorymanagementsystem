@@ -19,7 +19,7 @@ app.use(cookieParser());
 
 import userRoutes from "./routes/user.route.js";
 import productRoutes from "./routes/product.route.js";
-import orderRoutes from "./routes/orders.route.js";
+import orderRoutes from "./routes/sales.route.js";
 import purchasesRoutes from "./routes/purchases.route.js";
 import supplierRoutes from "./routes/supplier.route.js";
 

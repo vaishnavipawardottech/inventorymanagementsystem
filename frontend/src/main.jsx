@@ -12,6 +12,7 @@ import MainLayout from './MainLayout.jsx'
 import Dashboard from './components/Dashboard/Dashboard.jsx'
 import Products from './components/Products/Products.jsx'
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute.jsx'
+import Sales from './components/Sales/Sales.jsx'
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -26,6 +27,7 @@ const router = createBrowserRouter(
       <Route path='' element={<MainLayout />}>
         <Route path='dashboard' element={<Dashboard />} />
         <Route path='products' element={<Products />} />
+        <Route path='sales' element={<Sales />} />
       </Route>
     </>
   )

@@ -143,7 +143,8 @@ export const getOrderById = asyncHandler(async (req, res) => {
             .status(200)
             .json(new ApiResponse(200, {...orders[0], items}, "orders fetched successfully"))
     } catch (error) {
-        throw new ApiError(404, "Error while fetching the orders")
+        console.log("getorderbyid error: ", error);
+        throw new ApiError(500, "Error while fetching the orders")
     }
 })
 
@@ -247,5 +248,35 @@ export const deleteOrder = asyncHandler(async (req, res) => {
         throw new ApiError(500, "failed to delete the order");
     } finally{
         connection.release();
+    }
+})
+
+export const searchProducts = asyncHandler(async (req, res) => {
+    const {query = ""} = req.query;
+    try {
+        // const [products] = await pool.query(
+        //     `SELECT id, name, price FROM products
+        //     WHERE name LIKE ? AND deleted_at IS NULL
+        //     LIMIT 10`,
+        //     [`%${query}%`]
+        // )
+
+        let sql = `SELECT id, name, price FROM products WHERE deleted_at IS NULL`;
+        let params = [];
+
+        if(query) {
+            sql += ` AND name LIKE ?`;
+            params.push(`%${query}%`);
+        }
+
+        sql += ` LIMIT 20`;
+
+        const [products] = await pool.query(sql, params);
+
+        return res
+            .status(200)
+            .json(new ApiResponse(200, {products}, "Products fetched for the autocomplete successfully"))
+    } catch (error) {
+        throw new ApiError(400, "failed to fetch products")
     }
 })
