@@ -11,13 +11,20 @@ export const createSupplier = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Name and phone are required");
   }
 
+  const [existing] = await pool.query(
+    `SELECT * FROM suppliers WHERE email = ?`,[email]
+  )
+  if(existing.length>0) {
+    throw new ApiError(400, "supplier with this email already exist");
+  }
+
   const [result] = await pool.query(
     `INSERT INTO suppliers (name, email, phone, address) VALUES (?, ?, ?, ?)`,
     [name, email, phone, address]
   );
 
   return res.status(201).json(
-    new ApiResponse(201, { supplierId: result.insertId }, "Supplier created")
+    new ApiResponse(201, { supplierId: result.insertId, name, email, phone, address }, "Supplier created")
   );
 });
 

@@ -94,7 +94,7 @@ function BillFromModal({onClose, onSuccess}) {
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-600 hover:text-red-500 p-1"
+          className="absolute top-4 right-4 text-gray-600 hover:text-white hover:bg-red-500 rounded p-1"
         >
           <X size={20} />
         </button>

@@ -111,7 +111,7 @@ function Sales() {
     <div className="pt-30 pl-70 pr-6 pb-6 bg-gray-100 min-h-screen">
 
       <div className='flex flex-row justify-between mb-8'>
-        <h1 className="text-4xl font-semibold ">Sales</h1>
+        <h1 className="text-2xl font-semibold ">Sales</h1>
         <button
               onClick={() => setShowOrder(true)}
               className="bg-purple-700 text-white px-4 mr-20  py-2 rounded-lg flex items-center gap-2 mb-2"
@@ -143,7 +143,7 @@ function Sales() {
                     ₹{sale.total_amount}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
-                    {new Date(sale.created_at).toLocaleString()}
+                    {new Date(sale.created_at).toLocaleString("en-IN", { day: "2-digit", month: "2-digit", year: "numeric" })}
                   </p>
                   <p className="text-xs text-gray-500">
                     Created by: {sale.created_by}
@@ -153,13 +153,13 @@ function Sales() {
                   
                   <button
                     onClick={() => fetchBill(sale.id)}
-                    className="px-3 py-1 bg-purple-700 hover:bg-purple-800 text-white rounded-xl text-sm font-medium"
+                    className="px-3 py-1 cursor-pointer bg-purple-700 hover:bg-purple-800 text-white rounded-xl text-sm font-medium"
                   >
                     Generate Bill
                   </button>
                   <button
                     onClick={() => fetchSaleById(sale.id)}
-                    className='p-1 rounded-lg bg-purple-100 hover:bg-purple-200 text-purple-700 text-sm font-medium flex items-center justify-center transition'
+                    className='p-1 cursor-pointer rounded-lg bg-purple-100 hover:bg-purple-200 text-purple-700 text-sm font-medium flex items-center justify-center transition'
                   >
                     <Info size={20}/>
                   </button>
