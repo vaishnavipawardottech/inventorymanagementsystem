@@ -62,12 +62,29 @@ const createTable = async() => {
         console.log("products table created successfully");
         
         // purchases (when business buys stock from supplier)
+        // await pool.query(
+        //     `CREATE TABLE IF NOT EXISTS purchases(
+        //         id INT AUTO_INCREMENT PRIMARY KEY,
+        //         supplier_id INT NOT NULL,
+        //         total_amount DECIMAL(12, 2) NOT NULL,
+        //         created_by INT,
+        //         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        //         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        //         deleted_at TIMESTAMP DEFAULT NULL,
+        //         FOREIGN KEY (supplier_id) REFERENCES suppliers(id),
+        //         FOREIGN KEY (created_by) REFERENCES users(id)
+        //     );`
+        // )
+        // console.log("purchases table created successfully");
+
+
+        // drafts table (like purchases but status is "draft")
         await pool.query(
-            `CREATE TABLE IF NOT EXISTS purchases(
+            `CREATE TABLE IF NOT EXISTS purchase_drafts (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 supplier_id INT NOT NULL,
-                total_amount DECIMAL(12, 2) NOT NULL,
                 created_by INT,
+                status ENUM('draft', 'sent') DEFAULT 'draft',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 deleted_at TIMESTAMP DEFAULT NULL,
@@ -75,7 +92,19 @@ const createTable = async() => {
                 FOREIGN KEY (created_by) REFERENCES users(id)
             );`
         )
-        console.log("purchases table created successfully");
+
+        // draft_items (like purchase_items)
+        await pool.query(
+            `CREATE TABLE IF NOT EXISTS purchase_draft_items (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                draft_id INT NOT NULL,
+                product_id INT NOT NULL,
+                quantity INT NOT NULL,
+                FOREIGN KEY (draft_id) REFERENCES purchase_drafts(id) ON DELETE CASCADE,
+                FOREIGN KEY (product_id) REFERENCES products(id)
+            );`
+        )
+
         
         // purchase_items (line items for purchase)
         await pool.query(

@@ -22,11 +22,13 @@ import productRoutes from "./routes/product.route.js";
 import orderRoutes from "./routes/sales.route.js";
 import purchasesRoutes from "./routes/purchases.route.js";
 import supplierRoutes from "./routes/supplier.route.js";
+import purchaseDraftRoute from "./routes/purchaseDraft.route.js";
 
 app.use("/api/v1", userRoutes);
 app.use("/api/v1", productRoutes);
 app.use("/api/v1", orderRoutes);
 app.use("/api/v1", purchasesRoutes);
-app.use("/api/v1", supplierRoutes)
+app.use("/api/v1", supplierRoutes);
+app.use("/api/v1", purchaseDraftRoute);
 
 export { app };
