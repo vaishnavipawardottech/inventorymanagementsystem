@@ -14,6 +14,8 @@ import Products from './components/Products/Products.jsx'
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute.jsx'
 import Sales from './components/Sales/Sales.jsx'
 import Suppliers from './components/Suppliers/Suppliers.jsx'
+import SeeOrders from './components/Purchases/SeeOrders.jsx';
+import CreateDraft from './components/Purchases/CreateDraft.jsx';
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -30,6 +32,8 @@ const router = createBrowserRouter(
         <Route path='products' element={<Products />} />
         <Route path='sales' element={<Sales />} />
         <Route path='suppliers' element={<Suppliers />} />
+        <Route path='orders' element={<SeeOrders />} />
+        <Route path='drafts' element={<CreateDraft />} />
       </Route>
     </>
   )

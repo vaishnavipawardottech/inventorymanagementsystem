@@ -37,15 +37,61 @@ export const createDraft = asyncHandler(async (req, res) => {
 });
 
 export const getDrafts = asyncHandler(async (req, res) => {
-  const [rows] = await pool.query(
-    `SELECT d.*, s.name as supplier_name, s.email as supplier_email, s.phone as supplier_phone, u.username as created_by_name
-     FROM purchase_drafts d
-     LEFT JOIN suppliers s ON d.supplier_id = s.id
-     LEFT JOIN users u ON d.created_by = u.id
-     WHERE d.deleted_at IS NULL
-     ORDER BY d.created_at DESC`
-  );
-  return res.status(200).json(new ApiResponse(200, rows, "Drafts fetched"));
+  try {
+    //  Step 1: Fetch all purchase drafts with status = 'draft' only
+    const [drafts] = await pool.query(`
+      SELECT 
+        pd.*, 
+        s.name AS supplier_name, 
+        s.email AS supplier_email,
+        s.phone AS supplier_phone,
+        u.username AS created_by_name
+      FROM purchase_drafts pd
+      LEFT JOIN suppliers s ON pd.supplier_id = s.id
+      LEFT JOIN users u ON pd.created_by = u.id
+      WHERE pd.deleted_at IS NULL 
+        AND pd.status = 'draft'
+      ORDER BY pd.created_at DESC;
+    `);
+
+    //  Step 2: Fetch items linked to those drafts
+    const [items] = await pool.query(`
+      SELECT 
+        pdi.draft_id,
+        p.name AS product_name,
+        p.price AS price,
+        pdi.quantity AS quantity
+      FROM purchase_draft_items pdi
+      JOIN products p ON p.id = pdi.product_id;
+    `);
+
+    //  Step 3: Group items by draft_id
+    const draftMap = {};
+    items.forEach((item) => {
+      if (!draftMap[item.draft_id]) draftMap[item.draft_id] = [];
+      draftMap[item.draft_id].push(item);
+    });
+
+    //  Step 4: Attach products to each draft
+    const result = drafts.map((d) => ({
+      ...d,
+      products: draftMap[d.id] || [],
+    }));
+
+    res.status(200).json({
+      statusCode: 200,
+      data: result,
+      message: "Drafts fetched successfully",
+      success: true,
+    });
+  } catch (error) {
+    console.error("Error fetching drafts:", error);
+    res.status(500).json({
+      statusCode: 500,
+      message: "Server error",
+      success: false,
+    });
+  }
 });
 
 export const getDraftById = asyncHandler(async (req, res) => {

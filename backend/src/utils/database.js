@@ -62,20 +62,21 @@ const createTable = async() => {
         console.log("products table created successfully");
         
         // purchases (when business buys stock from supplier)
-        // await pool.query(
-        //     `CREATE TABLE IF NOT EXISTS purchases(
-        //         id INT AUTO_INCREMENT PRIMARY KEY,
-        //         supplier_id INT NOT NULL,
-        //         total_amount DECIMAL(12, 2) NOT NULL,
-        //         created_by INT,
-        //         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        //         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        //         deleted_at TIMESTAMP DEFAULT NULL,
-        //         FOREIGN KEY (supplier_id) REFERENCES suppliers(id),
-        //         FOREIGN KEY (created_by) REFERENCES users(id)
-        //     );`
-        // )
-        // console.log("purchases table created successfully");
+        await pool.query(
+            `CREATE TABLE IF NOT EXISTS purchases(
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                supplier_id INT NOT NULL,
+                total_amount DECIMAL(12, 2) NOT NULL,
+                status ENUM('ordered', 'delivered') DEFAULT 'ordered',
+                created_by INT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                deleted_at TIMESTAMP DEFAULT NULL,
+                FOREIGN KEY (supplier_id) REFERENCES suppliers(id),
+                FOREIGN KEY (created_by) REFERENCES users(id)
+            );`
+        )
+        console.log("purchases table created successfully");
 
 
         // drafts table (like purchases but status is "draft")

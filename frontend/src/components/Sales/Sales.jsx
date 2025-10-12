@@ -56,10 +56,10 @@ function Sales() {
 
     // Header
     doc.setFontSize(18);
-    doc.text("Invoice / Bill", 105, 20, { align: "center" });
+    doc.text("Invoice", 105, 20, { align: "center" });
 
     doc.setFontSize(12);
-    doc.text(`Invoice ID: ${sale.id}`, 20, 35);
+    // doc.text(`Invoice ID: ${sale.id}`, 20, 35);
     doc.text(`Date: ${new Date(sale.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}`, 20, 42);
 
     // Customer Info
@@ -132,9 +132,6 @@ function Sales() {
                 className="flex flex-col justify-between bg-white rounded-lg shadow-md p-4 w-[22%] min-w-[250px]"
               >
                 <div>
-                  <h3 className="text-lg font-bold text-gray-800">
-                    Sale: {sale.id}
-                  </h3>
                   <p className="text-sm text-gray-600">
                     Customer: {sale.customer_name}
                   </p>

@@ -62,6 +62,19 @@ export const createPurchase = asyncHandler(async (req, res) => {
 });
 
 
+// export const getPurchases = asyncHandler(async (req, res) => {
+//   const [rows] = await pool.query(
+//     `SELECT p.*, s.name as supplier_name, u.username as created_by_name
+//      FROM purchases p
+//      LEFT JOIN suppliers s ON p.supplier_id = s.id
+//      LEFT JOIN users u ON p.created_by = u.id
+//      WHERE p.deleted_at IS NULL
+//      ORDER BY p.created_at DESC`
+//   );
+
+//   return res.status(200).json(new ApiResponse(200, rows, "Purchases fetched"));
+// });
+
 export const getPurchases = asyncHandler(async (req, res) => {
   const [rows] = await pool.query(
     `SELECT p.*, s.name as supplier_name, u.username as created_by_name
@@ -69,6 +82,7 @@ export const getPurchases = asyncHandler(async (req, res) => {
      LEFT JOIN suppliers s ON p.supplier_id = s.id
      LEFT JOIN users u ON p.created_by = u.id
      WHERE p.deleted_at IS NULL
+       AND p.status = 'ordered'
      ORDER BY p.created_at DESC`
   );
 
