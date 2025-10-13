@@ -207,7 +207,7 @@ export const sendDraft = asyncHandler(async (req, res) => {
 
     await transporter.sendMail(mailOptions);
 
-    await pool.query(`UPDATE purchase_drafts SET status = 'sent' WHERE id = ?`, [id]);
+    await pool.query(`UPDATE purchase_drafts SET status = 'ordered' WHERE id = ?`, [id]);
 
     return res.status(200).json(new ApiResponse(200, {}, "Draft sent to supplier successfully"));
 });
@@ -219,3 +219,242 @@ export const getSuppliers = asyncHandler(async (req, res) => {
 
   res.status(200).json(new ApiResponse(200, suppliers, "Suppliers fetched successfully"));
 })
+
+// export const getOrderedPurchases = asyncHandler(async (req, res) => {
+//   const [orders] = await pool.query(`
+//     SELECT 
+//       pd.*, 
+//       s.name AS supplier_name, 
+//       s.email AS supplier_email, 
+//       u.username AS created_by_name
+//     FROM purchase_drafts pd
+//     LEFT JOIN suppliers s ON pd.supplier_id = s.id
+//     LEFT JOIN users u ON pd.created_by = u.id
+//     WHERE pd.status = 'ordered' AND pd.deleted_at IS NULL
+//     ORDER BY pd.created_at DESC;
+//   `);
+
+//   const [items] = await pool.query(`
+//     SELECT 
+//       pdi.draft_id, 
+//       p.name AS product_name, 
+//       p.price, 
+//       pdi.quantity
+//     FROM purchase_draft_items pdi
+//     JOIN products p ON p.id = pdi.product_id;
+//   `);
+
+//   const orderMap = {};
+//   items.forEach((i) => {
+//     if (!orderMap[i.draft_id]) orderMap[i.draft_id] = [];
+//     orderMap[i.draft_id].push(i);
+//   });
+
+//   const result = orders.map((o) => ({
+//     ...o,
+//     products: orderMap[o.id] || [],
+//   }));
+
+//   res.status(200).json(new ApiResponse(200, result, "Ordered purchases fetched successfully"));
+// });
+
+// export const getOrderedPurchases = asyncHandler(async (req, res) => {
+//   const [rows] = await pool.query(
+//     `SELECT d.*, s.name AS supplier_name, s.email AS supplier_email, u.username AS created_by_name
+//      FROM purchase_drafts d
+//      LEFT JOIN suppliers s ON d.supplier_id = s.id
+//      LEFT JOIN users u ON d.created_by = u.id
+//      WHERE d.deleted_at IS NULL AND (d.status = 'ordered' OR d.status = 'delivered')
+//      ORDER BY d.created_at DESC`
+//   );
+
+//   // Fetch products for each order
+//   for (let row of rows) {
+//     const [items] = await pool.query(
+//       `SELECT i.product_id, p.name AS product_name, i.quantity
+//        FROM purchase_draft_items i
+//        LEFT JOIN products p ON i.product_id = p.id
+//        WHERE i.draft_id = ?`,
+//       [row.id]
+//     );
+//     row.products = items;
+//   }
+
+//   return res.status(200).json(new ApiResponse(200, rows, "Orders fetched successfully"));
+// });
+
+export const getOrderedPurchases = asyncHandler(async (req, res) => {
+  // 1 Get all purchase drafts that are ordered or delivered
+  const [orders] = await pool.query(`
+    SELECT 
+      pd.*, 
+      s.name AS supplier_name, 
+      s.email AS supplier_email, 
+      u.username AS created_by_name
+    FROM purchase_drafts pd
+    LEFT JOIN suppliers s ON pd.supplier_id = s.id
+    LEFT JOIN users u ON pd.created_by = u.id
+    WHERE (pd.status = 'ordered' OR pd.status = 'delivered')
+      AND pd.deleted_at IS NULL
+    ORDER BY pd.created_at DESC;
+  `);
+
+  if (!orders.length) {
+    return res
+      .status(200)
+      .json(new ApiResponse(200, [], "No ordered or delivered purchases found"));
+  }
+
+  // 2 Fetch all items in one go
+  const [items] = await pool.query(`
+    SELECT 
+      pdi.draft_id, 
+      p.name AS product_name, 
+      p.price, 
+      pdi.quantity
+    FROM purchase_draft_items pdi
+    JOIN products p ON p.id = pdi.product_id;
+  `);
+
+  // 3 Group items by their draft_id
+  const orderMap = {};
+  items.forEach((item) => {
+    if (!orderMap[item.draft_id]) orderMap[item.draft_id] = [];
+    orderMap[item.draft_id].push(item);
+  });
+
+  // 4 Attach product list to each order
+  const result = orders.map((order) => ({
+    ...order,
+    products: orderMap[order.id] || [],
+  }));
+
+  // 5️⃣ Send response
+  res
+    .status(200)
+    .json(new ApiResponse(200, result, "Ordered and delivered purchases fetched successfully"));
+});
+
+
+export const markAsDelivered = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    // Fetch all items for this order
+    const [items] = await connection.query(`
+      SELECT product_id, quantity
+      FROM purchase_draft_items
+      WHERE draft_id = ?
+    `, [id]);
+
+    if (!items.length) throw new ApiError(404, "No items found for this order");
+
+    // Update stock for each product
+    for (const item of items) {
+      await connection.query(`
+        UPDATE products 
+        SET stock = stock + ? 
+        WHERE id = ?
+      `, [item.quantity, item.product_id]);
+    }
+
+    // Update order status
+    await connection.query(`
+      UPDATE purchase_drafts 
+      SET status = 'delivered' 
+      WHERE id = ?
+    `, [id]);
+
+    await connection.commit();
+    res.status(200).json(new ApiResponse(200, {}, "Order marked as delivered and inventory updated"));
+  } catch (err) {
+    await connection.rollback();
+    throw new ApiError(500, err.message || "Failed to mark as delivered");
+  } finally {
+    connection.release();
+  }
+});
+
+export const getDeliveredPurchases = asyncHandler(async (req, res) => {
+  const [delivered] = await pool.query(`
+    SELECT 
+      pd.*, 
+      s.name AS supplier_name, 
+      s.email AS supplier_email,
+      u.username AS created_by_name
+    FROM purchase_drafts pd
+    LEFT JOIN suppliers s ON pd.supplier_id = s.id
+    LEFT JOIN users u ON pd.created_by = u.id
+    WHERE pd.status = 'delivered' AND pd.deleted_at IS NULL
+    ORDER BY pd.created_at DESC;
+  `);
+
+  const [items] = await pool.query(`
+    SELECT 
+      pdi.draft_id, 
+      p.name AS product_name, 
+      p.price, 
+      pdi.quantity
+    FROM purchase_draft_items pdi
+    JOIN products p ON p.id = pdi.product_id;
+  `);
+
+  const itemMap = {};
+  items.forEach((i) => {
+    if (!itemMap[i.draft_id]) itemMap[i.draft_id] = [];
+    itemMap[i.draft_id].push(i);
+  });
+
+  const result = delivered.map((d) => ({
+    ...d,
+    products: itemMap[d.id] || [],
+  }));
+
+  res.status(200).json(new ApiResponse(200, result, "Delivered purchases fetched successfully"));
+});
+
+export const updateDraft = asyncHandler(async (req, res) => {
+  const { id } = req.params; // draft id
+  const { items } = req.body; // array of { product_id, quantity }
+
+  const connection = await pool.getConnection();
+
+  try {
+    await connection.beginTransaction();
+
+    // Check if draft exists and is still in 'draft' status
+    const [existing] = await connection.query(
+      `SELECT * FROM purchase_drafts WHERE id = ? AND status = 'draft' AND deleted_at IS NULL`,
+      [id]
+    );
+
+    if (existing.length === 0) {
+      throw new ApiError(404, "Draft not found or already sent");
+    }
+
+    // Remove old items (since we’ll reinsert updated list)
+    await connection.query(`DELETE FROM purchase_draft_items WHERE draft_id = ?`, [id]);
+
+    // Insert updated items
+    for (const item of items) {
+      await connection.query(
+        `INSERT INTO purchase_draft_items (draft_id, product_id, quantity)
+         VALUES (?, ?, ?)`,
+        [id, item.product_id, item.quantity]
+      );
+    }
+
+    await connection.commit();
+
+    res.status(200).json(new ApiResponse(200, {}, "Draft updated successfully"));
+  } catch (error) {
+    await connection.rollback();
+    throw new ApiError(500, error.message || "Failed to update draft");
+  } finally {
+    connection.release();
+  }
+});
+

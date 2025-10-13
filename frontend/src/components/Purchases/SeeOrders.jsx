@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Loader2, Eye } from "lucide-react";
+import { Loader2, Eye, X } from "lucide-react";
 import Modal from "../../Layout/Modal.jsx";
 
 function SeeOrders() {
@@ -10,7 +10,7 @@ function SeeOrders() {
 
   const fetchOrders = async () => {
     try {
-      const res = await axios.get("/api/v1/purchases");
+      const res = await axios.get("/api/v1/ordered");
       setOrders(res.data.data);
     } catch (error) {
       console.error("Error fetching purchases:", error);
@@ -36,7 +36,6 @@ function SeeOrders() {
       ) : orders.length === 0 ? (
         <p className="text-gray-500 text-center">No orders found.</p>
       ) : (
-        // ✅ FLEXBOX LAYOUT HERE
         <div className="flex flex-wrap gap-6 justify-start">
           {orders.map((order) => (
             <div
@@ -59,13 +58,16 @@ function SeeOrders() {
                   </span>
                 </div>
 
-                <p className="text-gray-600 text-sm">
+                <p className="text-gray-600 text-sm font-medium">
                   Total Amount:{" "}
-                  <span className="font-semibold">₹{order.total_amount}</span>
+                  <span className="font-normal">₹{order.products?.reduce(
+                    (sum, p) => sum + p.quantity * p.price,
+                    0
+                  )}</span>
                 </p>
-                <p className="text-gray-600 text-sm">
+                <p className="text-gray-600 text-sm font-medium">
                   Created By:{" "}
-                  <span className="font-medium">{order.created_by_name}</span>
+                  <span className="font-normal">{order.created_by_name}</span>
                 </p>
                 <p className="text-gray-500 text-xs mt-2">
                   Created on: {new Date(order.created_at).toLocaleString()}
@@ -79,6 +81,21 @@ function SeeOrders() {
                 >
                   <Eye size={16} /> View Details
                 </button>
+                {order.status === "ordered" && (
+                  <button
+                    onClick={async () => {
+                      try {
+                        await axios.put(`/api/v1/delivered/${order.id}`);
+                        fetchOrders(); 
+                      } catch (err) {
+                        console.error(err);
+                      }
+                    }}
+                    className="flex items-center px-3 py-2 border text-sm font-medium bg-green-700 text-white rounded-md hover:bg-green-800"
+                  >
+                    Mark as Delivered
+                  </button>
+                )}
               </div>
             </div>
           ))}
@@ -92,8 +109,15 @@ function SeeOrders() {
         title="Order Details"
       >
         {selectedOrder && (
-          <div>
-            <div className="mb-4 text-sm">
+          <div className="fixed inset-0 flex items-center justify-center bg-gray-100 bg-opacity-80 z-50">
+            <div className="relative bg-white p-6 rounded-lg shadow-lg w-[80%] max-w-md">
+              <button
+                  onClick={() => setSelectedOrder(null)}
+                  className="absolute top-4 right-4 text-gray-600 hover:text-white hover:bg-red-500 p-1 rounded"
+                >
+                  <X size={20} />
+              </button>
+              <div className="mb-4 text-sm">
               <p>
                 <strong>Supplier:</strong> {selectedOrder.supplier_name}
               </p>
@@ -133,9 +157,11 @@ function SeeOrders() {
                 0
               )}
             </div>
+            </div>
           </div>
         )}
       </Modal>
+
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import express from "express";
-import { createDraft, getDrafts, getDraftById, sendDraft, getSuppliers } from "../controllers/purchaseDraft.controller.js";
+import { createDraft, getDrafts, getDraftById, sendDraft, getSuppliers, getOrderedPurchases, getDeliveredPurchases, markAsDelivered, updateDraft } from "../controllers/purchaseDraft.controller.js";
 import { authenticateToken, authorizeRoles } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
@@ -9,5 +9,9 @@ router.get("/drafts", getDrafts);
 router.get("/draft/:id", getDraftById);
 router.post("/send-draft/:id", authenticateToken, authorizeRoles("admin"), sendDraft);
 router.get("/get-suppliers",authenticateToken, authorizeRoles("admin"), getSuppliers);
+router.get("/ordered",authenticateToken, authorizeRoles("admin"), getOrderedPurchases);
+router.get("/delivered", authenticateToken, authorizeRoles("admin"), getDeliveredPurchases);
+router.put("/delivered/:id", authenticateToken, authorizeRoles("admin"), markAsDelivered);
+router.put("/draft/:id", authenticateToken, authorizeRoles("admin"), updateDraft);
 
 export default router;

@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Send, FileText, Loader2, X } from "lucide-react";
+import { Send, FileText, Loader2, X, Trash2, Save } from "lucide-react";
 import Modal from "../../Layout/Modal.jsx";
 
 function CreateDraft() {
   const [drafts, setDrafts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedDraft, setSelectedDraft] = useState(null);
+  const [editableItems, setEditableItems] = useState([]);
 
   const fetchDrafts = async () => {
     try {
@@ -28,6 +29,33 @@ function CreateDraft() {
     }
   };
 
+  const handleQuantityChange = (index, newQty) => {
+    const updated = [...editableItems];
+    updated[index].quantity = newQty;
+    setEditableItems(updated);
+  }
+
+  const handleRemoveItem = (index) => {
+    const updated = [...editableItems];
+    updated.splice(index, 1);
+    setEditableItems(updated);
+  }
+
+  const handleSaveChanges = async () => {
+    try {
+      await axios.put(`/api/v1/draft/${selectedDraft.id}`, {
+        items: editableItems.map((p) => ({
+          product_id: p.product_id,
+          quantity: p.quantity,
+        })),
+      });
+      setSelectedDraft(null);
+      fetchDrafts();   
+    } catch (error) {
+      console.log("Failed to update draft: ", error);
+    }
+  }
+
   useEffect(() => {
     fetchDrafts();
   }, []);
@@ -43,7 +71,6 @@ function CreateDraft() {
       ) : drafts.length === 0 ? (
         <p className="text-gray-500 text-center">No drafts found.</p>
       ) : (
-        // ✅ FLEXBOX LAYOUT
         <div className="flex flex-wrap gap-6 justify-start">
           {drafts.map((draft) => (
             <div
@@ -57,7 +84,7 @@ function CreateDraft() {
                   </h2>
                   <span
                     className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      draft.status === "sent"
+                      draft.status === "ordered"
                         ? "bg-green-100 text-green-700"
                         : "bg-yellow-100 text-yellow-700"
                     }`}
@@ -66,17 +93,26 @@ function CreateDraft() {
                   </span>
                 </div>
 
-                <p className="text-gray-600 text-sm">
+                <p className="text-gray-600 text-sm font-medium">
                   Email:{" "}
-                  <span className="font-medium">{draft.supplier_email}</span>
+                  <span className="font-normal">{draft.supplier_email}</span>
                 </p>
-                <p className="text-gray-600 text-sm">
+                <p className="text-gray-600 text-sm font-medium">
                   Created By:{" "}
-                  <span className="font-medium">{draft.created_by_name}</span>
+                  <span className="font-normal">{draft.created_by_name}</span>
                 </p>
               </div>
 
               <div className="mt-4 flex justify-between items-center">
+                <button
+                  onClick={() => {
+                    setSelectedDraft(draft);
+                    setEditableItems(draft.products || []);
+                  }}
+                  className="flex items-center gap-2 px-3 py-2 rounded-md border text-gray-700 hover:bg-gray-100 text-sm font-medium"
+                >
+                  <FileText size={16} /> View List
+                </button>
                 <button
                   onClick={() => handleSendDraft(draft.id)}
                   disabled={draft.status === "sent"}
@@ -88,13 +124,6 @@ function CreateDraft() {
                 >
                   <Send size={16} /> Send Draft
                 </button>
-
-                <button
-                  onClick={() => setSelectedDraft(draft)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-md border text-gray-700 hover:bg-gray-100 text-sm font-medium"
-                >
-                  <FileText size={16} /> View
-                </button>
               </div>
             </div>
           ))}
@@ -102,7 +131,7 @@ function CreateDraft() {
       )}
 
       {/* ✅ Modal Section */}
-      <Modal
+      {/* <Modal
         isOpen={!!selectedDraft}
         onClose={() => setSelectedDraft(null)}
         title="Draft Details"
@@ -159,7 +188,91 @@ function CreateDraft() {
             </div>
           </div>
         )}
+      </Modal> */}
+
+      {/* ✅ Editable Modal */}
+      <Modal
+        isOpen={!!selectedDraft}
+        onClose={() => setSelectedDraft(null)}
+        title="Edit Draft Items"
+      >
+        {selectedDraft && (
+          <div className="fixed inset-0 flex items-center justify-center bg-gray-100 bg-opacity-80 z-50">
+            <div className="relative bg-white p-6 rounded-lg shadow-lg w-[85%] max-w-2xl">
+              <button
+                onClick={() => setSelectedDraft(null)}
+                className="absolute top-4 right-4 text-gray-600 hover:text-white hover:bg-red-500 p-1 rounded"
+              >
+                <X size={20} />
+              </button>
+
+              <h2 className="text-lg font-semibold mb-3 text-gray-800">
+                Supplier: {selectedDraft.supplier_name}
+              </h2>
+
+              <table className="w-full border text-sm">
+                <thead>
+                  <tr className="bg-gray-100 text-left">
+                    <th className="p-2 border">Product</th>
+                    <th className="p-2 border w-24">Qty</th>
+                    <th className="p-2 border">Price</th>
+                    <th className="p-2 border">Total</th>
+                    <th className="p-2 border">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {editableItems.map((p, i) => (
+                    <tr key={i} className="border-b">
+                      <td className="p-2 border">{p.product_name}</td>
+                      <td className="p-2 border">
+                        <input
+                          type="number"
+                          value={p.quantity}
+                          onChange={(e) =>
+                            handleQuantityChange(i, e.target.value)
+                          }
+                          className="w-16 border rounded px-1 py-0.5 text-center"
+                          min="1"
+                        />
+                      </td>
+                      <td className="p-2 border">₹{p.price}</td>
+                      <td className="p-2 border">
+                        ₹{(p.quantity * p.price).toFixed(2)}
+                      </td>
+                      <td className="p-2 border text-center">
+                        <button
+                          onClick={() => handleRemoveItem(i)}
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              <div className="text-right mt-3 font-semibold">
+                Total: ₹
+                {editableItems.reduce(
+                  (sum, p) => sum + p.quantity * p.price,
+                  0
+                )}
+              </div>
+
+              <div className="flex justify-end mt-5">
+                <button
+                  onClick={handleSaveChanges}
+                  className="flex items-center gap-2 px-4 py-2 rounded-md bg-green-600 text-white hover:bg-green-700"
+                >
+                  <Save size={16} /> Save Changes
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </Modal>
+
     </div>
   );
 }
