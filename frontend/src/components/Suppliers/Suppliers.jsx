@@ -119,7 +119,7 @@ function Suppliers() {
                 </button>
                 <button
                     onClick={() => {
-                        setSupplierToDelete(suppliers.id);
+                        setSupplierToDelete(supplier.id);
                         setShowDeleteModal(true);
                     }}
                     className="p-1 cursor-pointer rounded-lg bg-purple-100 hover:bg-purple-200 text-purple-700 text-sm"
@@ -170,9 +170,9 @@ function Suppliers() {
               </button>
               <button
                 onClick={async () => {
-                  await handleDelete(productToDelete);
+                  await handleDelete(supplierToDelete);
                   setShowDeleteModal(false);
-                  setProductToDelete(null);
+                  setSupplierToDelete(null);
                 }}
                 className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
               >
