@@ -182,3 +182,31 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
         throw new ApiError(401, "Could not refresh token");
     }
 })
+
+export const getProfile = asyncHandler(async (req, res) => {
+    try {
+        const [rows] = await pool.query(
+            `SELECT id, username, email, role, created_at, updated_at
+                FROM users
+                WHERE id = ? AND deleted_at IS NULL`,
+            [req.user.id]
+        );
+
+        if (rows.length === 0) {
+            return res
+                .status(404)
+                .jason(new ApiResponse(404, null, "User not found"));
+        }
+
+        const user = rows[0];
+
+        return res
+            .status(200)
+            .json(new ApiResponse(200, user, "User profile fetched successfully"));
+        
+    } catch (error) {
+        res
+            .status(500)
+            .json({success: false, message: "Server error"})
+    }
+})

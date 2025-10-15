@@ -100,10 +100,10 @@ function Sidebar() {
         )}
 
         {/* Logout */}
-        <NavLink to="/logout" className={linkClasses}>
+        {/* <NavLink to="/logout" className={linkClasses}>
           <LogOut className="h-5 w-5 text-gray-600" />
           <span className="text-black font-normal">Logout</span>
-        </NavLink>
+        </NavLink> */}
       </div>
     </div>
   );

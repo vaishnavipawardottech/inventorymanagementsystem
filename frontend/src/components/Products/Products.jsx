@@ -68,14 +68,13 @@ function Products() {
     setLoading(false);
   }
 
-  // fetch products
   useEffect(() => {
     fetchProducts(page, limit);
   }, [page, limit, searchTerm, categoryFilter, stockFilter]);
 
    
 
-      const handleDelete = async (id) => {
+    const handleDelete = async (id) => {
           try {
             await axios.delete(`/api/v1/products/${id}`);
             fetchProducts(page, limit);
@@ -164,25 +163,20 @@ function Products() {
   return (
 
       <>
-        <div className="ml-64 mt-16 mb-5 p-16 min-h-screen">
+        <div className="pt-30 pl-70 pr-6 pb-6 bg-gray-100 min-h-screen">
 
           {/* Header */}
-          <div className="flex ml-10 justify-between items-center mb-6">
-            {/* <h1 className="text-2xl font-bold">Products</h1> */}
-            <button
-              onClick={() => setShowModal(true)}
-              className="bg-purple-700 text-white px-4  py-2 rounded-lg flex items-center gap-2"
-            >
-              <Plus size={20} /> Add Product
-            </button>
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl font-semibold">Products</h1>
+            
           </div>
 
           {/* Filters */}
-          <div className="flex ml-10 flex-col md:flex-row gap-4 mb-2 justify-start">
+          <div className="flex flex-col md:flex-row gap-4 mb-3 justify-start">
             <input
               type="text"
               placeholder="Search products..."
-              className="border-2 p-2 rounded flex-1 w-full max-w-80"
+              className="border border-gray-200 px-3 py-2 rounded-lg flex-1 w-full max-w-80"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -226,15 +220,21 @@ function Products() {
             >
               Download
             </button>
+            <button
+              onClick={() => setShowModal(true)}
+              className="bg-purple-700 text-white px-4  py-2 rounded-lg flex items-center gap-2"
+            >
+              <Plus size={20} /> Add Product
+            </button>
         </div>
           
-          <div className='mt-2 ml-10'>
+          <div>
             <div className="border-t border-gray-200 mb-6"></div>
               {/* Products Cards */}
             {loading ? (
               <div>Loading...</div>
             ) : (
-              <div className="flex flex-wrap gap-6 mt-10">
+              <div className="flex flex-wrap gap-6 mt-3">
                 {products.map((product) => (
                   <div
                     key={product.id}

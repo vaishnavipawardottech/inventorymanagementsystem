@@ -49,20 +49,20 @@ function Suppliers() {
       </div>
 
       {/* Search */}
-      <div className="mb-4 flex flex-row items-center justify-between">
+      <div className="mb-3 flex flex-row items-center justify-between">
         <input
           type="text"
           placeholder="Search suppliers..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-1/3 px-3 py-2 border rounded-lg shadow-sm focus:ring focus:ring-purple-300"
+          className="w-1/3 px-3 py-2 border rounded-lg shadow-sm  border-gray-200"
         />
         <button
           onClick={() => {
             setEditingSupplier(null);
             setShowForm(true);
           }}
-          className="bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 mr-18"
+          className="bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 mr-8"
         >
           <Plus size={20} /> Add Supplier
         </button>
@@ -72,28 +72,28 @@ function Suppliers() {
         {loading ? (
         <p className="text-center text-gray-500">Loading...</p>
         ) : suppliers.length > 0 ? (
-        <div className="flex flex-wrap gap-6">
+        <div className="flex flex-wrap gap-6 border-t border-gray-200 py-3 px-1">
             {suppliers.map((supplier) => (
             <div
                 key={supplier.id}
-                className="bg-white p-5 rounded-xl shadow hover:shadow-lg transition flex flex-col justify-between w-[22%]" // 4 in a row
+                className="bg-white p-3 rounded-xl shadow hover:shadow-lg transition flex flex-col justify-between w-[22%] min-w-[270px]" // 4 in a row
             >
                 {/* Supplier Info */}
                 <div>
                 {/* <h2 className="text-lg font-semibold text-gray-600">
                     {supplier.name}
                 </h2> */}
-                <p className="text-gray-800 mt-1">
+                <p className="text-gray-800 mt-1 text-sm">
                     <span className="font-medium">Supplier:</span> {supplier.name}
                 </p>
-                <p className="text-gray-800">
+                <p className="text-gray-800 text-sm mt-1">
                     <span className="font-medium">Phone:</span> {supplier.phone}
                 </p>
-                <p className="text-gray-800">
+                <p className="text-gray-800 text-sm mt-1">
                     <span className="font-medium">Email:</span>{" "}
                     {supplier.email || "-"}
                 </p>
-                <p className="text-gray-800">
+                <p className="text-gray-800 text-sm mt-1">
                     <span className="font-medium">Address:</span>{" "}
                     {supplier.address || "-"}
                 </p>
@@ -127,9 +127,9 @@ function Suppliers() {
                     <Trash2 size={18} />
                 </button>
                 </div>
-                <p className="text-gray-500 text-sm mt-3">
+                <p className="text-gray-500 text-xs mt-3">
                     Added on:{" "}
-                    {new Date(supplier.created_at).toLocaleDateString("en-GB")}
+                    {new Date(supplier.created_at).toLocaleDateString("en-IN", { day:"2-digit", month:"2-digit", year:"numeric" })}
                 </p>
             </div>
             ))}

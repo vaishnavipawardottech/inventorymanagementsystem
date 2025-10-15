@@ -110,33 +110,35 @@ function Sales() {
   return (
     <div className="pt-30 pl-70 pr-6 pb-6 bg-gray-100 min-h-screen">
 
-      <div className='flex flex-row justify-between mb-8'>
+      <div className='flex flex-row justify-between mb-2 items-center'>
         <h1 className="text-2xl font-semibold ">Sales</h1>
         <button
-              onClick={() => setShowOrder(true)}
-              className="bg-purple-700 text-white px-4 mr-20  py-2 rounded-lg flex items-center gap-2 mb-2"
+            onClick={() => setShowOrder(true)}
+            className="bg-purple-700 text-white px-4 mr-18  py-2 rounded-lg flex items-center gap-2 mb-2"
             >
-              <Plus size={20} /> Create Bill
-            </button>
+            <Plus size={20} /> Create Bill
+        </button>
       </div>
       
 
       {loading ? (
         <p>Loading...</p>
       ) : (
-        <div className="flex flex-wrap gap-6">
+        <div className="flex flex-wrap gap-6 border-t border-gray-200 py-4">
           {sales.length > 0 ? (
             sales.map((sale) => (
               <div
                 key={sale.id}
-                className="flex flex-col justify-between bg-white rounded-lg shadow-md p-4 w-[22%] min-w-[250px]"
+                className="flex flex-col justify-between hover:shadow-lg bg-white rounded-lg shadow-md p-4 w-[22%] min-w-[250px]"
               >
                 <div>
-                  <p className="text-sm text-gray-600">
-                    Customer: {sale.customer_name}
+                  <p className="text-gray-800 text-sm">
+                    <span className="font-medium">Customer:</span> {sale.customer_name}
                   </p>
-                  <p className="text-sm text-gray-600">Phone: {sale.phone}</p>
-                  <p className="text-md font-semibold text-green-700 mt-2">
+                  <p className="text-gray-800 mt-1 text-sm">
+                    <span className="font-medium">Phone:</span> {sale.phone}
+                  </p>
+                  <p className="text-md font-semibold text-green-700 mt-2 mb-2">
                     ₹{sale.total_amount}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
@@ -146,7 +148,7 @@ function Sales() {
                     Created by: {sale.created_by}
                   </p>
                 </div>
-                <div className='flex justify-between gap-2 mt-4'>
+                <div className='flex justify-between gap-2 mt-3'>
                   
                   <button
                     onClick={() => fetchBill(sale.id)}
