@@ -56,6 +56,18 @@ function CreateDraft() {
     }
   }
 
+  // const savePrices = async (purchaseId, items) => {
+  // try {
+  //   await axios.put(`/api/v1/update-price/${purchaseId}`, {
+  //     items: items.map(i => ({ product_id: i.product_id, price: i.price })),
+  //   });
+  //   fetchPurchases(); // reload purchase list
+  // } catch (err) {
+  //   console.error("Failed to update prices", err);
+  // }
+  // };
+
+
   useEffect(() => {
     fetchDrafts();
   }, []);
@@ -124,71 +136,12 @@ function CreateDraft() {
                 >
                   <Send size={16} /> Send Draft
                 </button>
+
               </div>
             </div>
           ))}
         </div>
       )}
-
-      {/* ✅ Modal Section */}
-      {/* <Modal
-        isOpen={!!selectedDraft}
-        onClose={() => setSelectedDraft(null)}
-        title="Draft Details"
-      >
-        {selectedDraft && (
-          <div className="fixed inset-0 flex items-center justify-center bg-gray-100 bg-opacity-80 z-50">
-            <div className="relative bg-white p-6 rounded-lg shadow-lg w-[80%] max-w-md">
-                <button
-                    onClick={() => setSelectedDraft(null)}
-                    className="absolute top-4 right-4 text-gray-600 hover:text-white hover:bg-red-500 p-1 rounded"
-                    >
-                    <X size={20} />
-                </button>
-                <div className="mb-4 text-sm">
-                    <p>
-                        <strong>Supplier:</strong> {selectedDraft.supplier_name}
-                    </p>
-                    <p>
-                        <strong>Email:</strong> {selectedDraft.supplier_email}
-                    </p>
-                    <p>
-                        <strong>Created By:</strong> {selectedDraft.created_by_name}
-                    </p>
-                    </div>
-
-                    <table className="w-full border text-sm">
-                    <thead>
-                        <tr className="bg-gray-100 text-left">
-                        <th className="p-2 border">Product</th>
-                        <th className="p-2 border">Qty</th>
-                        <th className="p-2 border">Price</th>
-                        <th className="p-2 border">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {selectedDraft.products?.map((p, i) => (
-                        <tr key={i} className="border-b">
-                            <td className="p-2 border">{p.product_name}</td>
-                            <td className="p-2 border">{p.quantity}</td>
-                            <td className="p-2 border">₹{p.price}</td>
-                            <td className="p-2 border">₹{p.quantity * p.price}</td>
-                        </tr>
-                        ))}
-                    </tbody>
-                    </table>
-
-                    <div className="text-right mt-3 mr-2 font-semibold">
-                    Total: ₹
-                    {selectedDraft.products?.reduce(
-                        (sum, p) => sum + p.quantity * p.price,
-                        0
-                    )}
-                </div>
-            </div>
-          </div>
-        )}
-      </Modal> */}
 
       {/* ✅ Editable Modal */}
       <Modal

@@ -90,32 +90,32 @@ export const getPurchases = asyncHandler(async (req, res) => {
 });
 
 
-export const getPurchaseById = asyncHandler(async (req, res) => {
-  const { id } = req.params;
+// export const getPurchaseById = asyncHandler(async (req, res) => {
+//   const { id } = req.params;
 
-  const [purchase] = await pool.query(
-    `SELECT p.*, s.name as supplier_name, u.username as created_by_name
-     FROM purchases p
-     LEFT JOIN suppliers s ON p.supplier_id = s.id
-     LEFT JOIN users u ON p.created_by = u.id
-     WHERE p.id = ? AND p.deleted_at IS NULL`,
-    [id]
-  );
+//   const [purchase] = await pool.query(
+//     `SELECT p.*, s.name as supplier_name, u.username as created_by_name
+//      FROM purchases p
+//      LEFT JOIN suppliers s ON p.supplier_id = s.id
+//      LEFT JOIN users u ON p.created_by = u.id
+//      WHERE p.id = ? AND p.deleted_at IS NULL`,
+//     [id]
+//   );
 
-  if (purchase.length === 0) throw new ApiError(404, "Purchase not found");
+//   if (purchase.length === 0) throw new ApiError(404, "Purchase not found");
 
-  const [items] = await pool.query(
-    `SELECT pi.*, pr.name as product_name 
-     FROM purchase_items pi
-     LEFT JOIN products pr ON pi.product_id = pr.id
-     WHERE pi.purchase_id = ?`,
-    [id]
-  );
+//   const [items] = await pool.query(
+//     `SELECT pi.*, pr.name as product_name 
+//      FROM purchase_items pi
+//      LEFT JOIN products pr ON pi.product_id = pr.id
+//      WHERE pi.purchase_id = ?`,
+//     [id]
+//   );
 
-  return res
-    .status(200)
-    .json(new ApiResponse(200, { ...purchase[0], items }, "Purchase details"));
-});
+//   return res
+//     .status(200)
+//     .json(new ApiResponse(200, { ...purchase[0], items }, "Purchase details"));
+// });
 
 
 export const updatePurchase = asyncHandler(async (req, res) => {

@@ -20,6 +20,11 @@ export const createDraft = asyncHandler(async (req, res) => {
     const draftId = draftResult.insertId;
 
     for (let item of items) {
+      // Use product price as estimated cost
+      const [product] = await connection.query(
+        `SELECT price FROM products WHERE id = ?`,
+        [item.product_id]
+      );
       await connection.query(
         `INSERT INTO purchase_draft_items (draft_id, product_id, quantity) VALUES (?, ?, ?)`,
         [draftId, item.product_id, item.quantity]
@@ -58,11 +63,13 @@ export const getDrafts = asyncHandler(async (req, res) => {
     const [items] = await pool.query(`
       SELECT 
         pdi.draft_id,
+        pdi.product_id,
         p.name AS product_name,
         p.price AS price,
         pdi.quantity AS quantity
       FROM purchase_draft_items pdi
-      JOIN products p ON p.id = pdi.product_id;
+      JOIN products p ON p.id = pdi.product_id
+      WHERE pdi.draft_id IN (SELECT id FROM purchase_drafts WHERE status = 'draft' AND deleted_at IS NULL);
     `);
 
     //  Step 3: Group items by draft_id
@@ -336,47 +343,105 @@ export const getOrderedPurchases = asyncHandler(async (req, res) => {
 });
 
 
+// export const markAsDelivered = asyncHandler(async (req, res) => {
+//   const { id } = req.params;
+
+//   const connection = await pool.getConnection();
+//   try {
+//     await connection.beginTransaction();
+
+//     // Fetch all items for this order
+//     const [items] = await connection.query(`
+//       SELECT product_id, quantity
+//       FROM purchase_draft_items
+//       WHERE draft_id = ?
+//     `, [id]);
+
+//     if (!items.length) throw new ApiError(404, "No items found for this order");
+
+//     // Update stock for each product
+//     for (const item of items) {
+//       await connection.query(`
+//         UPDATE products 
+//         SET stock = stock + ? 
+//         WHERE id = ?
+//       `, [item.quantity, item.product_id]);
+//     }
+
+//     // Update order status
+//     await connection.query(`
+//       UPDATE purchase_drafts 
+//       SET status = 'delivered' 
+//       WHERE id = ?
+//     `, [id]);
+
+//     await connection.commit();
+//     res.status(200).json(new ApiResponse(200, {}, "Order marked as delivered and inventory updated"));
+//   } catch (err) {
+//     await connection.rollback();
+//     throw new ApiError(500, err.message || "Failed to mark as delivered");
+//   } finally {
+//     connection.release();
+//   }
+// });
+
 export const markAsDelivered = asyncHandler(async (req, res) => {
-  const { id } = req.params;
+  const { id } = req.params; // draft_id
 
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
 
-    // Fetch all items for this order
-    const [items] = await connection.query(`
-      SELECT product_id, quantity
-      FROM purchase_draft_items
-      WHERE draft_id = ?
-    `, [id]);
+    // Get draft items
+    const [items] = await connection.query(
+      `SELECT pdi.product_id, pdi.quantity, p.price
+       FROM purchase_draft_items pdi
+       JOIN products p ON p.id = pdi.product_id
+       WHERE pdi.draft_id = ?`,
+      [id]
+    );
 
-    if (!items.length) throw new ApiError(404, "No items found for this order");
+    if (!items.length) throw new Error("No items found for this draft");
 
-    // Update stock for each product
-    for (const item of items) {
-      await connection.query(`
-        UPDATE products 
-        SET stock = stock + ? 
-        WHERE id = ?
-      `, [item.quantity, item.product_id]);
+    // Create purchase entry
+    const [purchaseResult] = await connection.query(
+      `INSERT INTO purchases (supplier_id, created_by) 
+       SELECT supplier_id, created_by FROM purchase_drafts WHERE id = ?`,
+      [id]
+    );
+    const purchaseId = purchaseResult.insertId;
+
+    // Insert items into purchase_items
+    for (let item of items) {
+      await connection.query(
+        `INSERT INTO purchase_items (purchase_id, product_id, quantity, price)
+         VALUES (?, ?, ?, ?)`,
+        [purchaseId, item.product_id, item.quantity, item.price]
+      );
+
+      // Update stock
+      await connection.query(
+        `UPDATE products SET stock = stock + ? WHERE id = ?`,
+        [item.quantity, item.product_id]
+      );
     }
 
-    // Update order status
-    await connection.query(`
-      UPDATE purchase_drafts 
-      SET status = 'delivered' 
-      WHERE id = ?
-    `, [id]);
+    // Update draft status
+    await connection.query(
+      `UPDATE purchase_drafts SET status = 'delivered' WHERE id = ?`,
+      [id]
+    );
 
     await connection.commit();
-    res.status(200).json(new ApiResponse(200, {}, "Order marked as delivered and inventory updated"));
-  } catch (err) {
+    res.status(200).json({ message: "Draft delivered and stock updated" });
+  } catch (error) {
     await connection.rollback();
-    throw new ApiError(500, err.message || "Failed to mark as delivered");
+    res.status(500).json({ message: error.message });
   } finally {
     connection.release();
   }
 });
+
 
 export const getDeliveredPurchases = asyncHandler(async (req, res) => {
   const [delivered] = await pool.query(`
@@ -456,5 +521,44 @@ export const updateDraft = asyncHandler(async (req, res) => {
   } finally {
     connection.release();
   }
+});
+
+export const updatePurchasePrice = asyncHandler(async (req, res) => {
+  const { purchaseId } = req.params;
+  const { items } = req.body; // [{ product_id, price }]
+
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    for (let item of items) {
+      await connection.query(
+        `UPDATE purchase_items SET price = ? WHERE purchase_id = ? AND product_id = ?`,
+        [item.price, purchaseId, item.product_id]
+      );
+    }
+
+    await connection.commit();
+    res.status(200).json({ message: "Purchase prices updated successfully" });
+  } catch (err) {
+    await connection.rollback();
+    res.status(500).json({ message: err.message });
+  } finally {
+    connection.release();
+  }
+});
+
+export const getPurchaseById = asyncHandler(async (req, res) => {
+  const { purchaseId } = req.params;
+
+  const [items] = await pool.query(
+    `SELECT pi.*, p.name AS product_name
+     FROM purchase_items pi
+     JOIN products p ON p.id = pi.product_id
+     WHERE pi.purchase_id = ?`,
+    [purchaseId]
+  );
+
+  res.status(200).json({ items });
 });
 

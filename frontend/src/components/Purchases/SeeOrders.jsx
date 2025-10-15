@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Loader2, Eye, X } from "lucide-react";
+import { Loader2, Eye, X, FileText } from "lucide-react";
 import Modal from "../../Layout/Modal.jsx";
+import UpdatePurchasePrice from "../../Layout/UpdatePurchasePrice.jsx";
 
 function SeeOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [updatePurchaseId, setUpdatePurchaseId] = useState(null);
 
   const fetchOrders = async () => {
     try {
@@ -91,9 +93,17 @@ function SeeOrders() {
                         console.error(err);
                       }
                     }}
-                    className="flex items-center px-3 py-2 border text-sm font-medium bg-green-700 text-white rounded-md hover:bg-green-800"
+                    className="flex items-center px-3 py-2 border text-sm font-medium bg-green-600 text-white rounded-md hover:bg-green-700"
                   >
                     Mark as Delivered
+                  </button>
+                )}
+                {order.status === "delivered" && (
+                  <button
+                    onClick={() => setUpdatePurchaseId(order.id)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-md bg-green-600 text-white text-sm font-medium hover:bg-green-700"
+                  >
+                    <FileText size={16} /> Update Prices
                   </button>
                 )}
               </div>
@@ -162,6 +172,12 @@ function SeeOrders() {
         )}
       </Modal>
 
+        {updatePurchaseId && (
+          <UpdatePurchasePrice
+            purchaseId={updatePurchaseId}
+            onClose={() => setUpdatePurchaseId(null)}
+          />
+      )}
     </div>
   );
 }
