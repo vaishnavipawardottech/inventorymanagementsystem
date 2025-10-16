@@ -428,12 +428,17 @@ export const markAsDelivered = asyncHandler(async (req, res) => {
 
     // Update draft status
     await connection.query(
-      `UPDATE purchase_drafts SET status = 'delivered' WHERE id = ?`,
-      [id]
+      `UPDATE purchase_drafts SET status = 'delivered', purchase_id = ? WHERE id = ?`,
+      [purchaseId, id]
+    );
+
+    await connection.query(
+      `UPDATE purchase_draft_items SET purchase_id = ? WHERE draft_id = ?`,
+      [purchaseId, id]
     );
 
     await connection.commit();
-    res.status(200).json({ message: "Draft delivered and stock updated" });
+    res.status(200).json({ message: "Draft delivered and stock updated", purchaseId });
   } catch (error) {
     await connection.rollback();
     res.status(500).json({ message: error.message });
@@ -524,7 +529,7 @@ export const updateDraft = asyncHandler(async (req, res) => {
 });
 
 export const updatePurchasePrice = asyncHandler(async (req, res) => {
-  const { purchaseId } = req.params;
+  const { id: purchaseId } = req.params;
   const { items } = req.body; // [{ product_id, price }]
 
   const connection = await pool.getConnection();

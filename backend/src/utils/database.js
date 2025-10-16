@@ -83,6 +83,7 @@ const createTable = async() => {
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 supplier_id INT NOT NULL,
                 created_by INT,
+                purchase_id INT DEFAULT NULL,
                 status ENUM('draft', 'ordered', 'delivered') DEFAULT 'draft',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -98,6 +99,7 @@ const createTable = async() => {
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 draft_id INT NOT NULL,
                 product_id INT NOT NULL,
+                purchase_id INT DEFAULT NULL,
                 quantity INT NOT NULL,
                 FOREIGN KEY (draft_id) REFERENCES purchase_drafts(id) ON DELETE CASCADE,
                 FOREIGN KEY (product_id) REFERENCES products(id)

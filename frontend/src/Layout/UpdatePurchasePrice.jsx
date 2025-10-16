@@ -7,7 +7,7 @@ function UpdatePurchasePrice({ purchaseId, onClose }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // ✅ Fetch items of this purchase
+  // Fetch items of this purchase
   const fetchPurchaseItems = async () => {
     try {
       const res = await axios.get(`/api/v1/purchases/${purchaseId}`);
@@ -34,12 +34,11 @@ function UpdatePurchasePrice({ purchaseId, onClose }) {
           product_id: i.product_id,
           price: i.price,
         })),
+        
       });
-      alert("✅ Prices updated successfully!");
       onClose();
     } catch (err) {
       console.error("Failed to update prices", err);
-      alert(" Failed to update prices");
     }
   };
 
@@ -51,14 +50,9 @@ function UpdatePurchasePrice({ purchaseId, onClose }) {
 
   return (
     <Modal isOpen={!!purchaseId} onClose={onClose} title="Update Purchase Prices">
-      <div className="relative bg-white p-6 rounded-xl shadow-lg w-[90%] max-w-3xl mx-auto">
+      <div className="relative bg-white p-4 rounded-xl  w-[90%] max-w-3xl mx-auto">
         {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-600 hover:text-white hover:bg-red-500 p-1 rounded"
-        >
-          <X size={20} />
-        </button>
+        
 
         {/* Table */}
         <div className="max-h-[60vh] overflow-y-auto">

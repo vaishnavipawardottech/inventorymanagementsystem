@@ -87,7 +87,7 @@ function SeeOrders() {
                   <button
                     onClick={async () => {
                       try {
-                        await axios.put(`/api/v1/delivered/${order.id}`);
+                        const res = await axios.put(`/api/v1/delivered/${order.id}`);
                         fetchOrders(); 
                       } catch (err) {
                         console.error(err);
@@ -100,7 +100,10 @@ function SeeOrders() {
                 )}
                 {order.status === "delivered" && (
                   <button
-                    onClick={() => setUpdatePurchaseId(order.id)}
+                    onClick={() => {
+                      setUpdatePurchaseId(order.purchase_id);
+
+                    }}
                     className="flex items-center gap-2 px-3 py-2 rounded-md bg-green-600 text-white text-sm font-medium hover:bg-green-700"
                   >
                     <FileText size={16} /> Update Prices
