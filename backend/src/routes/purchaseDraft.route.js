@@ -8,7 +8,7 @@ router.post("/create-draft",authenticateToken, authorizeRoles("admin"), createDr
 router.get("/drafts", getDrafts);
 router.get("/draft/:id", getDraftById);
 router.post("/send-draft/:id", authenticateToken, authorizeRoles("admin"), sendDraft);
-router.get("/get-suppliers",authenticateToken, authorizeRoles("admin"), getSuppliers);
+router.get("/suppliers",authenticateToken, authorizeRoles("admin"), getSuppliers);
 router.get("/ordered",authenticateToken, authorizeRoles("admin"), getOrderedPurchases);
 router.get("/delivered", authenticateToken, authorizeRoles("admin"), getDeliveredPurchases);
 router.put("/delivered/:id", authenticateToken, authorizeRoles("admin"), markAsDelivered);

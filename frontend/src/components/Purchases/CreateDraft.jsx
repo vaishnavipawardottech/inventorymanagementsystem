@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Send, FileText, Loader2, X, Trash2, Save } from "lucide-react";
+import { Send, FileText, Loader2, X, Trash2, Save, Plus } from "lucide-react";
 import Modal from "../../Layout/Modal.jsx";
 
 function CreateDraft() {
@@ -8,6 +8,13 @@ function CreateDraft() {
   const [loading, setLoading] = useState(true);
   const [selectedDraft, setSelectedDraft] = useState(null);
   const [editableItems, setEditableItems] = useState([]);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newDraft, setNewDraft] = useState({
+    supplier_id: "",
+    items: [{product_id: "", quantity: 1}],
+  });
+  const [suppliers, setSuppliers] = useState([]);
+  const [products, setProducts] = useState([]);
 
   const fetchDrafts = async () => {
     try {
@@ -56,6 +63,39 @@ function CreateDraft() {
     }
   }
 
+  const fetchSuppliers = async () => {
+    try {
+      const res = await axios.get("/api/v1/suppliers")
+      setSuppliers(res.data.data.suppliers)
+    } catch (error) {
+      console.log("Error loading suppliers: ", error);
+    }
+  }
+
+  const fetchProducts = async () => {
+    try {
+      const res = await axios.get("/api/v1/allproducts");
+      setProducts(res.data.data);
+    } catch (error) {
+      console.log("Error loading products: ", error);
+      
+    }
+  }
+
+  const handleCreateDraft = async () => {
+    try {
+      await axios.post("/api/v1/create-draft", newDraft);
+      setShowCreateModal(false);
+      fetchDrafts();
+      setNewDraft({
+        supplier_id: "",
+        items: [{product_id: "", quantity: 1}],
+      })
+    } catch (error) {
+      console.log("Failed to create draft: ", error);
+    }
+  }
+
   // const savePrices = async (purchaseId, items) => {
   // try {
   //   await axios.put(`/api/v1/update-price/${purchaseId}`, {
@@ -70,11 +110,22 @@ function CreateDraft() {
 
   useEffect(() => {
     fetchDrafts();
+    fetchSuppliers();
+    fetchProducts();
   }, []);
 
   return (
     <div className="pt-30 pl-70 pr-6 pb-6 bg-gray-100 min-h-screen">
-      <h1 className="text-2xl font-semibold text-gray-800 mb-6">Purchase Drafts</h1>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-semibold text-gray-800">Purchase Drafts</h1>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center mr-9 gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+          >
+            <Plus size={20} /> Create Draft
+          </button>
+        </div>
+
 
       {loading ? (
         <div className="flex justify-center py-20">
@@ -143,7 +194,7 @@ function CreateDraft() {
         </div>
       )}
 
-      {/* ✅ Editable Modal */}
+      {/* Editable Modal */}
       <Modal
         isOpen={!!selectedDraft}
         onClose={() => setSelectedDraft(null)}
@@ -225,6 +276,105 @@ function CreateDraft() {
           </div>
         )}
       </Modal>
+
+      <Modal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        title="Create Purchase Draft"
+      >
+        <div className="bg-white p-6 rounded-lg shadow-md w-[90%] max-w-2xl mx-auto">
+          <div className="space-y-4">
+            {/* Supplier Selection */}
+            <div>
+              <label className="block text-sm font-medium mb-1">Supplier</label>
+              <select
+                value={newDraft.supplier_id}
+                onChange={(e) =>
+                  setNewDraft({ ...newDraft, supplier_id: e.target.value })
+                }
+                className="w-full border rounded px-2 py-1"
+              >
+                <option value="">Select Supplier</option>
+                {suppliers.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Product Items */}
+            <div>
+              <h3 className="text-md font-medium mb-2">Items</h3>
+              {newDraft.items.map((item, i) => (
+                <div key={i} className="flex items-center gap-3 mb-2">
+                  <select
+                    value={item.product_id}
+                    onChange={(e) => {
+                      const updated = [...newDraft.items];
+                      updated[i].product_id = e.target.value;
+                      setNewDraft({ ...newDraft, items: updated });
+                    }}
+                    className="flex-1 border rounded px-2 py-1"
+                  >
+                    <option value="">Select Product</option>
+                    {products.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="number"
+                    min="1"
+                    value={item.quantity}
+                    onChange={(e) => {
+                      const updated = [...newDraft.items];
+                      updated[i].quantity = e.target.value;
+                      setNewDraft({ ...newDraft, items: updated });
+                    }}
+                    className="w-20 border rounded px-2 py-1 text-center"
+                  />
+                  <button
+                    onClick={() => {
+                      const updated = newDraft.items.filter((_, idx) => idx !== i);
+                      setNewDraft({ ...newDraft, items: updated });
+                    }}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+              ))}
+
+              {/* Add Item Button */}
+              <button
+                onClick={() =>
+                  setNewDraft({
+                    ...newDraft,
+                    items: [...newDraft.items, { product_id: "", quantity: 1 }],
+                  })
+                }
+                className="text-indigo-600 text-sm font-medium hover:underline"
+              >
+                + Add Another Item
+              </button>
+            </div>
+
+            {/* Save Button */}
+            <div className="flex justify-end mt-5">
+              <button
+                onClick={handleCreateDraft}
+                disabled={!newDraft.supplier_id || newDraft.items.length === 0}
+                className="flex items-center gap-2 px-4 py-2 rounded-md bg-green-600 text-white hover:bg-green-700"
+              >
+                <Save size={16} /> Save Draft
+              </button>
+            </div>
+          </div>
+        </div>
+      </Modal>
+
 
     </div>
   );

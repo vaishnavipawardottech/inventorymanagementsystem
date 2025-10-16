@@ -182,3 +182,26 @@ export const deleteProductById = asyncHandler(async(req, res) => {
     .json(new ApiResponse(200, "Product deleted successfully", {id}));
 
 })
+
+export const getAllProductsSimple = asyncHandler(async (req, res) => {
+  try {
+    const [products] = await pool.query(
+      `SELECT id, name, price, stock_status FROM products WHERE deleted_at IS NULL ORDER BY name`
+    );
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          products,
+          "All products fetched successfully"
+        )
+      );
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    return res
+      .status(500)
+      .json(new ApiResponse(500, null, "Failed to fetch products"));
+  }
+});
