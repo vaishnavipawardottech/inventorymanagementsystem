@@ -116,11 +116,11 @@ function CreateDraft() {
 
   return (
     <div className="pt-30 pl-70 pr-6 pb-6 bg-gray-100 min-h-screen">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-semibold text-gray-800">Purchase Drafts</h1>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center mr-9 gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+            className="flex items-center mr-9 gap-2 px-4 py-2 bg-purple-700 text-white rounded-lg hover:bg-purple-800"
           >
             <Plus size={20} /> Create Draft
           </button>
@@ -134,26 +134,27 @@ function CreateDraft() {
       ) : drafts.length === 0 ? (
         <p className="text-gray-500 text-center">No drafts found.</p>
       ) : (
-        <div className="flex flex-wrap gap-6 justify-start">
+        <div className="flex flex-wrap gap-6 border-t border-gray-200 py-3 px-1 justify-start">
           {drafts.map((draft) => (
             <div
               key={draft.id}
-              className="flex flex-col justify-between bg-white shadow-md rounded-2xl p-5 border hover:shadow-lg transition w-full sm:w-[48%] lg:w-[31%]"
+              className="relative flex flex-col justify-between bg-white shadow-md rounded-2xl p-5 border hover:shadow-lg transition w-full sm:w-[48%] lg:w-[31%]"
             >
+              <div
+                className={`absolute top-0 right-0 translate-x-[1px] -translate-y-[1px] px-3 py-2 rounded-bl-lg text-xs font-semibold shadow-sm ${
+                  draft.status === "ordered"
+                    ? "bg-green-100 text-green-700"
+                    : "bg-yellow-100 text-yellow-700"
+                }`}
+              >
+                {draft.status}
+              </div>
               <div>
-                <div className="flex justify-between items-center mb-3">
+                <div className="mb-3">
+                  {/* Supplier Name */}
                   <h2 className="text-lg font-medium text-gray-800">
                     Supplier: {draft.supplier_name}
                   </h2>
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      draft.status === "ordered"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-yellow-100 text-yellow-700"
-                    }`}
-                  >
-                    {draft.status}
-                  </span>
                 </div>
 
                 <p className="text-gray-600 text-sm font-medium">
@@ -182,7 +183,7 @@ function CreateDraft() {
                   className={`flex items-center gap-2 px-3 py-2 rounded-md text-white text-sm font-medium ${
                     draft.status === "sent"
                       ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-indigo-600 hover:bg-indigo-700"
+                      : "bg-purple-700 hover:bg-purple-800"
                   }`}
                 >
                   <Send size={16} /> Send Draft

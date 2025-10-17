@@ -102,12 +102,6 @@ function Suppliers() {
 
                 {/* Actions - moved to bottom, centered */}
                 <div className="flex justify-start gap-3 mt-4">
-                {/* <button
-                    onClick={() => setViewSupplier(supplier)}
-                    className="p-1 cursor-pointer rounded-lg bg-purple-100 hover:bg-purple-200 text-purple-700 text-sm"
-                >
-                    <Info size={18} />
-                </button> */}
                 <button
                     onClick={() => {
                     setEditingSupplier(supplier);
