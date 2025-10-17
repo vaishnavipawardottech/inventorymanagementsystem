@@ -5,6 +5,7 @@ const createTable = async() => {
         await pool.query(
             `CREATE TABLE IF NOT EXISTS users (
                 id INT AUTO_INCREMENT PRIMARY KEY,
+                company_id INT DEFAULT NULL,
                 username VARCHAR(100) NOT NULL,
                 email VARCHAR(150) UNIQUE NOT NULL,
                 password VARCHAR(255) NOT NULL,
@@ -12,7 +13,8 @@ const createTable = async() => {
                 role ENUM('admin', 'staff') DEFAULT 'staff',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                deleted_at TIMESTAMP DEFAULT NULL
+                deleted_at TIMESTAMP DEFAULT NULL,
+                FOREIGN KEY (company_id) REFERENCES companies(id)
             );`
         )
         console.log("users table created successfully");
@@ -151,6 +153,29 @@ const createTable = async() => {
             );`
         )
         console.log("sale_items table created successfully");
+
+        await pool.query(
+            `CREATE TABLE IF NOT EXISTS companies (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                company_name VARCHAR(150) NOT NULL,
+                company_email VARCHAR(150) UNIQUE NOT NULL,
+                no_of_staff INT DEFAULT 0,
+                no_of_admin INT DEFAULT 1,
+                plan ENUM('free', 'starter', 'enterprise') DEFAULT 'free',
+                tokens TEXT DEFAULT NULL,
+                address TEXT DEFAULT NULL,
+                timezoneFrom VARCHAR(50) DEFAULT NULL,
+                timezoneTo VARCHAR(50) DEFAULT NULL,
+                otp VARCHAR(10) DEFAULT NULL,
+                otpExpiry DATETIME DEFAULT NULL,
+                isVerified BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                deleted_at TIMESTAMP DEFAULT NULL
+            );`
+            );
+            console.log("companies table created successfully");
+
 
     } catch (error) {
         console.log("Something went wrong", error);

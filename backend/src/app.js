@@ -23,6 +23,7 @@ import orderRoutes from "./routes/sales.route.js";
 import purchasesRoutes from "./routes/purchases.route.js";
 import supplierRoutes from "./routes/supplier.route.js";
 import purchaseDraftRoute from "./routes/purchaseDraft.route.js";
+import companyRoutes from "./routes/company.route.js";
 
 app.use("/api/v1", userRoutes);
 app.use("/api/v1", productRoutes);
@@ -30,5 +31,6 @@ app.use("/api/v1", orderRoutes);
 app.use("/api/v1", purchasesRoutes);
 app.use("/api/v1", supplierRoutes);
 app.use("/api/v1", purchaseDraftRoute);
+app.use("/api/v1", companyRoutes);
 
 export { app };

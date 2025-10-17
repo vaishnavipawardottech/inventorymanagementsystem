@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
+import { Building2 } from "lucide-react";
 import {
   LayoutDashboard,
   Box,
@@ -15,6 +16,18 @@ function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [openPurchases, setOpenPurchases] = useState(false);
+  const [showCompanyModal, setShowCompanyModal] = useState(false);
+  const [companyData, setCompanyData] = useState({
+    company_name: "",
+    company_email: "",
+    plan: "free"
+  })
+
+  const handleCompanySubmit = (e) => {
+    e.preventDefault();
+    // later add api call to save company info
+    setShowCompanyModal(false);
+  }
 
   const linkClasses = ({ isActive }) =>
     `flex items-center gap-4 px-6 py-3 ml-6 mr-8 mt-2 rounded-md transition 
@@ -98,13 +111,57 @@ function Sidebar() {
             </NavLink>
           </div>
         )}
-
-        {/* Logout */}
-        {/* <NavLink to="/logout" className={linkClasses}>
-          <LogOut className="h-5 w-5 text-gray-600" />
-          <span className="text-black font-normal">Logout</span>
-        </NavLink> */}
       </div>
+
+      {/* Company Button */}
+      <div className="absolute bottom-0 left-0 w-full p-4 border-t mb-15 border-gray-200">
+        <button
+          onClick={() => setShowCompanyModal(true)}
+          className="flex items-start gap-3 w-full ml-10 text-black py-2 rounded-md font-normal "
+        >
+          <Building2 className="text-gray-600 h-5 w-5" /> Company
+        </button>
+      </div>
+
+      {/* -------- Company Modal -------- */}
+      {showCompanyModal && (
+        <div className="fixed inset-0 bg-gray-100 bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 relative w-[90%] max-w-md border border-gray-200">
+            <h2 className="text-lg font-semibold mb-4 text-center">Add Company Details</h2>
+
+            <form className="absolute flex flex-col gap-3">
+              <input
+                type="text"
+                placeholder="Company Name"
+                className="border border-gray-300 rounded-md p-2"
+              />
+              <input
+                type="text"
+                placeholder="Role"
+                className="border border-gray-300 rounded-md p-2"
+              />
+            </form>
+
+            <div className="flex justify-end gap-2 mt-4">
+              <button
+                onClick={() => setShowCompanyModal(false)}
+                className="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  // Backend will be connected later
+                  setShowCompanyModal(false);
+                }}
+                className="px-4 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
