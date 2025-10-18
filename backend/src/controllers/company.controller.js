@@ -4,10 +4,9 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import nodemailer from "nodemailer";
 
-// generate random 6-digit OTP
+// 6-digit OTP
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
 
-// Register a new company
 export const registerCompany = asyncHandler(async (req, res) => {
   const {
     company_name,
@@ -19,6 +18,8 @@ export const registerCompany = asyncHandler(async (req, res) => {
     no_of_admin,
     plan,
   } = req.body;
+
+  const adminId = req.user?.id;
 
   if (!company_name || !company_email) {
     throw new ApiError(400, "Company name and email are required");
@@ -62,6 +63,13 @@ export const registerCompany = asyncHandler(async (req, res) => {
     );
 
     const companyId = result.insertId;
+
+    if (adminId) {
+      await connection.query(
+        `UPDATE users SET company_id = ?, role = 'admin' WHERE id = ?`,
+        [companyId, adminId]
+      );
+    }
 
     // send email with OTP
     const transporter = nodemailer.createTransport({
@@ -137,28 +145,28 @@ export const verifyCompany = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, "Company verified successfully"));
 });
 
-export const getCompanyProfile = asyncHandler(async (req, res) => {
-  const companyId = req.params.id || req.user?.company_id;
+// export const getCompanyProfile = asyncHandler(async (req, res) => {
+//   const companyId = req.params.id || req.user?.company_id;
 
-  if (!companyId) {
-    throw new ApiError(400, "Company ID is required");
-  }
+//   if (!companyId) {
+//     throw new ApiError(400, "Company ID is required");
+//   }
 
-  const [rows] = await pool.query(
-    `SELECT id, company_name, company_email, no_of_staff, no_of_admin, plan, address, timezoneFrom, timezoneTo, isVerified, created_at 
-     FROM companies 
-     WHERE id = ? AND deleted_at IS NULL`,
-    [companyId]
-  );
+//   const [rows] = await pool.query(
+//     `SELECT id, company_name, company_email, no_of_staff, no_of_admin, plan, address, timezoneFrom, timezoneTo, isVerified, created_at 
+//      FROM companies 
+//      WHERE id = ? AND deleted_at IS NULL`,
+//     [companyId]
+//   );
 
-  if (rows.length === 0) {
-    throw new ApiError(404, "Company not found");
-  }
+//   if (rows.length === 0) {
+//     throw new ApiError(404, "Company not found");
+//   }
 
-  return res
-    .status(200)
-    .json(new ApiResponse(200, rows[0], "Company profile fetched successfully"));
-});
+//   return res
+//     .status(200)
+//     .json(new ApiResponse(200, rows[0], "Company profile fetched successfully"));
+// });
 
 export const updateCompany = asyncHandler(async (req, res) => {
   const companyId = req.params.id || req.user?.company_id;
@@ -242,4 +250,58 @@ export const deleteCompany = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(new ApiResponse(200, {}, "Company deleted successfully"));
+});
+
+export const getCompanyProfile = asyncHandler(async (req, res) => {
+  const companyId = req.params.id || req.user?.company_id;
+
+  if (!companyId) {
+    throw new ApiError(400, "Company ID is required");
+  }
+
+  // Fetch company info
+  const [companyRows] = await pool.query(
+    `SELECT id, company_name, company_email, no_of_staff, no_of_admin, plan, address, timezoneFrom, timezoneTo, isVerified, created_at 
+     FROM companies 
+     WHERE id = ? AND deleted_at IS NULL`,
+    [companyId]
+  );
+
+  if (companyRows.length === 0) {
+    throw new ApiError(404, "Company not found");
+  }
+
+  const company = companyRows[0];
+
+  // 🔹 Calculate staff and admin counts from users table
+  const [userCounts] = await pool.query(
+    `SELECT 
+        SUM(CASE WHEN role = 'staff' THEN 1 ELSE 0 END) AS staffCount,
+        SUM(CASE WHEN role = 'admin' THEN 1 ELSE 0 END) AS adminCount
+     FROM users 
+     WHERE company_id = ? AND deleted_at IS NULL`,
+    [companyId]
+  );
+
+  const no_of_staff = userCounts[0].staffCount || 0;
+  const no_of_admin = userCounts[0].adminCount || 0;
+
+  // 🔹 Update the company table with new counts
+  await pool.query(
+    `UPDATE companies 
+     SET no_of_staff = ?, no_of_admin = ?, updated_at = CURRENT_TIMESTAMP 
+     WHERE id = ?`,
+    [no_of_staff, no_of_admin, companyId]
+  );
+
+  // 🔹 Return combined data
+  const updatedCompany = {
+    ...company,
+    no_of_staff,
+    no_of_admin,
+  };
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, updatedCompany, "Company profile fetched and staff/admin count updated"));
 });

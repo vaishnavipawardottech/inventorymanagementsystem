@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
-import { Building2 } from "lucide-react";
+import { Building2, X } from "lucide-react";
 import {
   LayoutDashboard,
   Box,
@@ -59,7 +59,7 @@ function Sidebar() {
   };
 
   return (
-    <div className="w-64 bg-white fixed top-16 left-0 h-full border-r border-gray-300">
+    <div className="w-64 bg-white fixed top-16 left-0 h-full border-r border-gray-300 z-40">
       <div className="flex flex-col mt-6">
         {/* Dashboard */}
         <NavLink to="/dashboard" className={linkClasses}>
@@ -123,13 +123,19 @@ function Sidebar() {
         </button>
       </div>
 
-      {/* -------- Company Modal -------- */}
+      {/* Company Modal */}
       {showCompanyModal && (
-        <div className="fixed inset-0 bg-gray-100 bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-gray-100 bg-opacity-60 flex items-center justify-center z-[9999]">
           <div className="bg-white rounded-lg shadow-lg p-6 relative w-[90%] max-w-md border border-gray-200">
+            <button
+                onClick={() => setShowCompanyModal(false)}
+                className="absolute top-4 right-4 text-gray-600 hover:text-white hover:bg-red-500 p-1 rounded"
+              >
+                <X size={20} />
+              </button>
             <h2 className="text-lg font-semibold mb-4 text-center">Add Company Details</h2>
 
-            <form className="absolute flex flex-col gap-3">
+            <form className="flex flex-col gap-3">
               <input
                 type="text"
                 placeholder="Company Name"
