@@ -30,7 +30,7 @@ function Sidebar() {
   }
 
   const linkClasses = ({ isActive }) =>
-    `flex items-center gap-4 px-6 py-3 ml-6 mr-8 mt-2 rounded-md transition 
+    `flex items-center gap-4 px-6 py-3 ml-3 mr-8 mt-2 rounded-md transition 
      ${
        isActive
          ? "bg-gray-100 text-indigo-600 font-medium"
@@ -88,7 +88,7 @@ function Sidebar() {
         {/* Purchases Dropdown */}
         <div
           onClick={handlePurchasesClick}
-          className={`flex items-center justify-between gap-4 px-6 py-3 ml-6 mr-8 mt-2 rounded-md cursor-pointer transition text-gray-700 hover:bg-gray-100 hover:text-black`}
+          className={`flex items-center justify-between gap-4 px-6 py-3 ml-3 mr-8 mt-2 rounded-md cursor-pointer transition text-gray-700 hover:bg-gray-100 hover:text-black`}
         >
           <div className="flex items-center gap-4">
             <ShoppingCart className="h-5 w-5 text-gray-600" />
@@ -113,18 +113,16 @@ function Sidebar() {
         )}
       </div>
 
-      {/* Company Button */}
+      {/* Company Button at bottom */}
       <div className="absolute bottom-0 left-0 w-full p-4 border-t mb-15 border-gray-200">
-        <button
-          onClick={() => setShowCompanyModal(true)}
-          className="flex items-start gap-3 w-full ml-10 text-black py-2 rounded-md font-normal "
-        >
-          <Building2 className="text-gray-600 h-5 w-5" /> Company
-        </button>
+        <NavLink to="/company" className={linkClasses}>
+          <Building2 className="h-5 w-5 text-gray-600" />
+          <span className="text-black font-normal">Company</span>
+        </NavLink>
       </div>
 
       {/* Company Modal */}
-      {showCompanyModal && (
+      {/* {showCompanyModal && (
         <div className="fixed inset-0 bg-gray-100 bg-opacity-60 flex items-center justify-center z-[9999]">
           <div className="bg-white rounded-lg shadow-lg p-6 relative w-[90%] max-w-md border border-gray-200">
             <button
@@ -167,7 +165,7 @@ function Sidebar() {
             </div>
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 }

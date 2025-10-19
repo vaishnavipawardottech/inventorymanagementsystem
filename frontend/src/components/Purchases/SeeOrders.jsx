@@ -39,7 +39,7 @@ function SeeOrders() {
         Purchase Orders
       </h1>
 
-      {/* ✅ STATUS FILTER DROPDOWN */}
+      {/* STATUS FILTER DROPDOWN */}
       <div className="mb-3 flex flex-col md:flex-row justify-start gap-4">
         <div className="relative w-full max-w-56">
           <button

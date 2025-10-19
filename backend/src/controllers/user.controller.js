@@ -78,7 +78,8 @@ export const loginUser = asyncHandler(async(req, res) => {
             id: user.id,
             email: user.email,
             role: user.role,
-            username: user.username
+            username: user.username,
+            company_id: user.company_id
         };
 
         const accessToken = generateToken(tokenPayload);

@@ -273,7 +273,7 @@ export const getCompanyProfile = asyncHandler(async (req, res) => {
 
   const company = companyRows[0];
 
-  // 🔹 Calculate staff and admin counts from users table
+  // Calculate staff and admin counts from users table
   const [userCounts] = await pool.query(
     `SELECT 
         SUM(CASE WHEN role = 'staff' THEN 1 ELSE 0 END) AS staffCount,
@@ -286,7 +286,7 @@ export const getCompanyProfile = asyncHandler(async (req, res) => {
   const no_of_staff = userCounts[0].staffCount || 0;
   const no_of_admin = userCounts[0].adminCount || 0;
 
-  // 🔹 Update the company table with new counts
+  // Update the company table with new counts
   await pool.query(
     `UPDATE companies 
      SET no_of_staff = ?, no_of_admin = ?, updated_at = CURRENT_TIMESTAMP 
@@ -294,7 +294,7 @@ export const getCompanyProfile = asyncHandler(async (req, res) => {
     [no_of_staff, no_of_admin, companyId]
   );
 
-  // 🔹 Return combined data
+  // Return combined data
   const updatedCompany = {
     ...company,
     no_of_staff,
@@ -305,3 +305,41 @@ export const getCompanyProfile = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, updatedCompany, "Company profile fetched and staff/admin count updated"));
 });
+
+export const getAllCompanies = asyncHandler(async( req, res) => {
+  const [companies] = await pool.query(
+    `SELECT id, company_name, company_email, isVerified
+    FROM companies
+    WHERE deleted_at IS NULL
+    ORDER BY created_at ASC`
+  );
+
+  return res 
+    .status(200)
+    .json(new ApiResponse(200, companies, "Companies fetched successfully"));
+})
+
+export const getMyCompany = asyncHandler(async (req, res) => {
+  const companyId = req.user?.company_id;
+  console.log(companyId);
+  
+
+  if(!companyId) {
+    throw new ApiError(400, "User is not associated with any company");
+  }
+
+  const [rows] = await pool.query(
+    `SELECT id, company_name, company_email, no_of_staff, no_of_admin, plan, address, timezoneFrom, timezoneTo, isVerified, created_at
+    FROM companies
+    WHERE id = ? AND deleted_at IS NULL`,
+    [companyId]
+  );
+
+  if (rows.length === 0) {
+    throw new ApiError(404, "Company not found");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, rows[0], "Logged-in user's company details fetched successfully."))
+})

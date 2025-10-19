@@ -1,5 +1,5 @@
 import express from "express";
-import { registerCompany, verifyCompany, getCompanyProfile, updateCompany, deleteCompany } from "../controllers/company.controller.js";
+import { registerCompany, verifyCompany, getCompanyProfile, updateCompany, deleteCompany, getAllCompanies, getMyCompany } from "../controllers/company.controller.js";
 import { authenticateToken, authorizeRoles } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
@@ -9,5 +9,7 @@ router.post("/verify", verifyCompany);
 router.get("/company/:id", authenticateToken, getCompanyProfile);
 router.put("/company/:id", authenticateToken, authorizeRoles("admin"), updateCompany);
 router.delete("/company/:id", authenticateToken, authorizeRoles("admin"), deleteCompany);
+router.get("/companies", authenticateToken, getAllCompanies);
+router.get("/my-company", authenticateToken, getMyCompany);
 
 export default router;

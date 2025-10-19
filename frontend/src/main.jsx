@@ -16,6 +16,7 @@ import Sales from './components/Sales/Sales.jsx'
 import Suppliers from './components/Suppliers/Suppliers.jsx'
 import SeeOrders from './components/Purchases/SeeOrders.jsx';
 import CreateDraft from './components/Purchases/CreateDraft.jsx';
+import Company from './components/Company/Company.jsx';
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -34,6 +35,7 @@ const router = createBrowserRouter(
         <Route path='suppliers' element={<Suppliers />} />
         <Route path='orders' element={<SeeOrders />} />
         <Route path='drafts' element={<CreateDraft />} />
+        <Route path='company' element={<Company />} />
       </Route>
     </>
   )
