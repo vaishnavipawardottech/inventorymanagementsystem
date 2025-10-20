@@ -1,5 +1,5 @@
 import express from "express";
-import { registerCompany, verifyCompany, getCompanyProfile, updateCompany, deleteCompany, getAllCompanies, getMyCompany } from "../controllers/company.controller.js";
+import { registerCompany, verifyCompany, getCompanyProfile, updateCompany, deleteCompany, getAllCompanies, getMyCompany, updateCompanyInfo } from "../controllers/company.controller.js";
 import { authenticateToken, authorizeRoles } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
@@ -11,5 +11,6 @@ router.put("/company/:id", authenticateToken, authorizeRoles("admin"), updateCom
 router.delete("/company/:id", authenticateToken, authorizeRoles("admin"), deleteCompany);
 router.get("/companies", authenticateToken, getAllCompanies);
 router.get("/my-company", authenticateToken, getMyCompany);
+router.put("/my-company", authenticateToken, updateCompanyInfo);
 
 export default router;

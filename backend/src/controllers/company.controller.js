@@ -343,3 +343,82 @@ export const getMyCompany = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, rows[0], "Logged-in user's company details fetched successfully."))
 })
+
+export const updateCompanyInfo = asyncHandler(async (req, res) => {
+  const companyId = req.user?.company_id;
+
+  const {
+    company_name,
+    company_email,
+    address,
+    timezoneFrom,
+    timezoneTo,
+    no_of_staff,
+    no_of_admin,
+    plan,
+    isVerified,
+  } = req.body;
+
+  if (!companyId) {
+    throw new ApiError(400, "Company ID is required");
+  }
+
+  // Check if company exists
+  const [existing] = await pool.query(
+    `SELECT * FROM companies WHERE id = ? AND deleted_at IS NULL`,
+    [companyId]
+  );
+
+  // console.log(existing);
+  
+
+  if (existing.length === 0) {
+    throw new ApiError(404, "Company not found");
+  }
+
+  // Update all details
+  const result = await pool.query(
+    `UPDATE companies 
+     SET 
+        company_name = ?,
+        company_email = ?,
+        address = ?,
+        timezoneFrom = ?,
+        timezoneTo = ?,
+        no_of_staff = ?,
+        no_of_admin = ?,
+        plan = ?,
+        isVerified = ?,
+        updated_at = CURRENT_TIMESTAMP
+     WHERE id = ?`,
+    [
+      company_name || existing[0].company_name,
+      company_email || existing[0].company_email,
+      address || existing[0].address,
+      timezoneFrom || existing[0].timezoneFrom,
+      timezoneTo || existing[0].timezoneTo,
+      no_of_staff || existing[0].no_of_staff,
+      no_of_admin || existing[0].no_of_admin,
+      plan || existing[0].plan,
+      isVerified ?? existing[0].isVerified,
+      companyId,
+    ]
+  );
+
+  // console.log(result);
+
+  // Fetch updated record
+  const [updated] = await pool.query(
+    `SELECT id, company_name, company_email, no_of_staff, no_of_admin, plan, address, timezoneFrom, timezoneTo, isVerified, created_at, updated_at 
+     FROM companies 
+     WHERE id = ?`,
+    [companyId]
+  );
+
+  // console.log(updated[0]);
+  
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, updated[0], "Company information fully updated successfully"));
+});

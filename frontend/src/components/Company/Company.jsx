@@ -68,7 +68,7 @@ function Company() {
           <div className="space-y-4">
             <div className="flex justify-between items-center border-b border-gray-100 pb-2">
               <span className="text-gray-500 font-normal ml-5">Name</span>
-              <span className="text-gray-800 font-normal">
+              <span className="text-gray-800 font-normal mr-11">
                 {company.company_name}
               </span>
               <button className="cursor-pointer">
