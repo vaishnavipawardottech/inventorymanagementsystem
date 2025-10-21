@@ -9,7 +9,7 @@ router.post("/verify", verifyCompany);
 router.get("/company/:id", authenticateToken, getCompanyProfile);
 router.put("/company/:id", authenticateToken, authorizeRoles("admin"), updateCompany);
 router.delete("/company/:id", authenticateToken, authorizeRoles("admin"), deleteCompany);
-router.get("/companies", authenticateToken, getAllCompanies);
+router.get("/companies", getAllCompanies);
 router.get("/my-company", authenticateToken, getMyCompany);
 router.put("/my-company", authenticateToken, updateCompanyInfo);
 
