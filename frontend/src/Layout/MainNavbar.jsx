@@ -37,10 +37,9 @@ function MainNavbar() {
     }
   }, []);
 
-  if(!user) {
-    console.log("user not found");
-    
-  }
+  // if(!user) {
+  //   console.log("user not found");
+  // }
 
   const handleLogout = async () => {
     try {
@@ -117,9 +116,8 @@ function MainNavbar() {
       {showDeleteModal && (
           <div className="fixed inset-0 bg-gray-100 bg-opacity-40 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm">
-            <h2 className="text-lg font-bold mb-4 text-gray-800">Delete Supplier</h2>
-            <p className="mb-6 text-gray-700">Are you sure, you want to Logout?</p>
-            <div className="flex justify-end gap-3">
+            <p className="mb-8 flex flex-row justify-center mt-3 text-gray-800 font-normal">Are you sure, you want to Logout?</p>
+            <div className="flex justify-center gap-3">
               <button
                 onClick={() => setShowDeleteModal(false)}
                 className="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300"
