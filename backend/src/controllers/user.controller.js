@@ -6,73 +6,173 @@ import {generateToken, generateRefreshToken, verifyToken, verifyRefreshToken} fr
 import bcrypt from "bcryptjs";
 import {v4 as uuidv4} from "uuid";
 
-export const registerUser = asyncHandler(async(req, res) => {
-    try {
-        const { username, email, password, role, isCompanyMember, companyName } = req.body;
+// export const registerUser = asyncHandler(async(req, res) => {
+//     try {
+//         const { username, email, password, role, isCompanyMember, companyName } = req.body;
 
-        if ([username, email, password].some((field) => !field || field.trim() === "")) {
-            throw new ApiError(400, "All fields are required");
-        }
+//         if ([username, email, password].some((field) => !field || field.trim() === "")) {
+//             throw new ApiError(400, "All fields are required");
+//         }
 
-        const [existing] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
-        if(existing.length > 0) {
-            throw new ApiError(400, "User with this email already exists");
-        }
+//         const [existing] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
+//         if(existing.length > 0) {
+//             throw new ApiError(400, "User with this email already exists");
+//         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+//         const hashedPassword = await bcrypt.hash(password, 10);
 
-        let userRole = 'staff';
+//         let userRole = 'staff';
 
-        const [countRows] = await pool.query("SELECT COUNT(*) as count FROM users");
-        if(countRows[0].count === 0) {
-            userRole = "admin";
-        } else if(role && role === "admin") {
-            userRole = "admin";
-        }
+//         const [countRows] = await pool.query("SELECT COUNT(*) as count FROM users");
+//         if(countRows[0].count === 0) {
+//             userRole = "admin";
+//         } else if(role && role === "admin") {
+//             userRole = "admin";
+//         }
 
-        // company association with user
-        let companyId = null;
-        if (isCompanyMember && companyName) {
-            const [companyRows] = await pool.query(
-                `SELECT id FROM companies WHERE company_name = ? AND deleted_at IS NULL`,
-                [companyName.trim()]
-            );
-            if (companyRows.length === 0) {
-                throw new ApiError(404, "no company found with this name")
-            }
+//         // company association with user
+//         let companyId = null;
+//         if (isCompanyMember && companyName) {
+//             const [companyRows] = await pool.query(
+//                 `SELECT id FROM companies WHERE company_name = ? AND deleted_at IS NULL`,
+//                 [companyName.trim()]
+//             );
+//             if (companyRows.length === 0) {
+//                 throw new ApiError(404, "no company found with this name")
+//             }
 
-            companyId = companyRows[0].id;
-        }
+//             companyId = companyRows[0].id;
+//         }
 
-        const [result] = await pool.query(
-            `INSERT INTO users (username, email, password, refresh_token, role, company_id) VALUES(?, ?, ?, ?, ?, ?)`, 
-            [username, email, hashedPassword, "", userRole, companyId]
-        )
+//         const [result] = await pool.query(
+//             `INSERT INTO users (username, email, password, refresh_token, role, company_id) VALUES(?, ?, ?, ?, ?, ?)`, 
+//             [username, email, hashedPassword, "", userRole, companyId]
+//         )
 
-        const [createdUser] = await pool.query(
-            "SELECT id, username, email, role, company_id, created_at, updated_at, deleted_at FROM users WHERE id = ?",
-            [result.insertId]
-        )
+//         const [createdUser] = await pool.query(
+//             "SELECT id, username, email, role, company_id, created_at, updated_at, deleted_at FROM users WHERE id = ?",
+//             [result.insertId]
+//         )
 
-        if (companyId) {
-            if (userRole === "admin") {
-                await pool.query("UPDATE companies SET no_of_admin = no_of_admin + 1 WHERE id = ?", [companyId]);
-            } else {
-                await pool.query("UPDATE companies SET no_of_staff = no_of_staff + 1 WHERE id = ?", [companyId]);
-            }
-        }
+//         if (companyId) {
+//             if (userRole === "admin") {
+//                 await pool.query("UPDATE companies SET no_of_admin = no_of_admin + 1 WHERE id = ?", [companyId]);
+//             } else {
+//                 await pool.query("UPDATE companies SET no_of_staff = no_of_staff + 1 WHERE id = ?", [companyId]);
+//             }
+//         }
 
-        return res
-            .status(201)
-            .json(new ApiResponse(201, createdUser[0], "User registered successfully"));
+//         return res
+//             .status(201)
+//             .json(new ApiResponse(201, createdUser[0], "User registered successfully"));
         
-    } catch (error) {
-        console.log("Error while creating the user: ", error);
-        return res
-            .status(500)
-            .json(new ApiError(500, `Internal Server Error: ${error}`));
+//     } catch (error) {
+//         console.log("Error while creating the user: ", error);
+//         return res
+//             .status(500)
+//             .json(new ApiError(500, `Internal Server Error: ${error}`));
+//     }
+// })
+
+export const registerUser = asyncHandler(async (req, res) => {
+  try {
+    const { username, email, password, role, isCompanyMember, companyName } = req.body;
+
+    if ([username, email, password].some((field) => !field || field.trim() === "")) {
+      throw new ApiError(400, "All fields are required");
     }
-})
+
+    // check if user already exists
+    const [existing] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
+    if (existing.length > 0) {
+      throw new ApiError(400, "User with this email already exists");
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Check how many users exist in the system
+    const [countRows] = await pool.query("SELECT COUNT(*) as count FROM users");
+    const isFirstUser = countRows[0].count === 0;
+
+    // Check how many companies exist
+    const [companyCountRows] = await pool.query("SELECT COUNT(*) as companyCount FROM companies WHERE deleted_at IS NULL");
+    const companyExists = companyCountRows[0].companyCount > 0;
+
+    let userRole = "staff";
+    let companyId = null;
+
+    // 1️) If this is the first user → make them admin
+    if (isFirstUser) {
+      userRole = "admin";
+    }
+    // 2) If user explicitly selects admin role later (optional logic)
+    else if (role && role === "admin") {
+      userRole = "admin";
+    }
+
+    // 3) Handle company membership
+    if (isCompanyMember && companyName) {
+      const [companyRows] = await pool.query(
+        `SELECT id FROM companies WHERE company_name = ? AND deleted_at IS NULL`,
+        [companyName.trim()]
+      );
+
+      if (companyRows.length === 0) {
+        throw new ApiError(404, "No company found with this name");
+      }
+
+      companyId = companyRows[0].id;
+    } else if (!isCompanyMember && !companyExists && isFirstUser) {
+      // This is the first ever user and no company exists
+      // They will register successfully but need to register a company afterward
+      companyId = null;
+    } else if (!isCompanyMember && companyExists) {
+      // If companies exist but user didn’t choose one
+      throw new ApiError(400, "Please select a company or mark yourself as a company member");
+    }
+
+    // 4) Insert new user
+    const [result] = await pool.query(
+      `INSERT INTO users (username, email, password, refresh_token, role, company_id)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [username, email, hashedPassword, "", userRole, companyId]
+    );
+
+    const [createdUser] = await pool.query(
+      "SELECT id, username, email, role, company_id, created_at FROM users WHERE id = ?",
+      [result.insertId]
+    );
+
+    // 5) Update company stats if applicable
+    if (companyId) {
+      if (userRole === "admin") {
+        await pool.query("UPDATE companies SET no_of_admin = no_of_admin + 1 WHERE id = ?", [companyId]);
+      } else {
+        await pool.query("UPDATE companies SET no_of_staff = no_of_staff + 1 WHERE id = ?", [companyId]);
+      }
+    }
+
+    // 6) If it's the first user and no company exists
+    if (isFirstUser && !companyExists) {
+      return res
+        .status(201)
+        .json(
+          new ApiResponse(
+            201,
+            { user: createdUser[0], needsCompanyRegistration: true },
+            "User registered successfully — please register your company next."
+          )
+        );
+    }
+
+    // 7) Default response
+    return res.status(201).json(new ApiResponse(201, createdUser[0], "User registered successfully"));
+  } catch (error) {
+    console.log("Error while creating the user: ", error);
+    return res.status(500).json(new ApiError(500, `Internal Server Error: ${error}`));
+  }
+});
+
 
 export const loginUser = asyncHandler(async(req, res) => {
     try {

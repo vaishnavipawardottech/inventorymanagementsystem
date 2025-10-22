@@ -36,7 +36,9 @@ export const registerCompany = asyncHandler(async (req, res) => {
     );
 
     if (existing.length > 0) {
-      throw new ApiError(400, "Company already registered with this email");
+      return res
+        .status(400)
+        .json(new ApiError(400, "Company already registered with this email"));
     }
 
     const otp = generateOTP();
@@ -98,7 +100,9 @@ export const registerCompany = asyncHandler(async (req, res) => {
       .json(new ApiResponse(201, { companyId }, "Company registered. Verify OTP sent to email."));
   } catch (error) {
     await connection.rollback();
-    throw new ApiError(500, error.message || "Failed to register company");
+    return res
+      .status(500)
+      .json(new ApiError(500, error.message || "Failed to register company"));
   } finally {
     connection.release();
   }

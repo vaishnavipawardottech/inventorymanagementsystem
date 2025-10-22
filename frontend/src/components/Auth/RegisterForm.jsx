@@ -69,7 +69,14 @@ function RegisterForm() {
         isCompanyMember: false,
         companyName: "",
       });
-      navigate("/login");
+
+      const {needsCompanyRegistration} = res.data.data || {};
+
+      if (needsCompanyRegistration) {
+        navigate("/register-company");
+      } else {
+        navigate("/login");
+      }
     } catch (error) {
       console.log("Registration failed:", error);
       const errormsg = error.response?.data?.message || "Registration failed";

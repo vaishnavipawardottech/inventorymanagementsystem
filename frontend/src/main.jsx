@@ -17,6 +17,8 @@ import Suppliers from './components/Suppliers/Suppliers.jsx'
 import SeeOrders from './components/Purchases/SeeOrders.jsx';
 import CreateDraft from './components/Purchases/CreateDraft.jsx';
 import Company from './components/Company/Company.jsx';
+import RegisterCompany from './components/Company/RegisterCompany.jsx'
+import VerifyCompany from './components/Company/verifyCompany.jsx'
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -24,6 +26,8 @@ const router = createBrowserRouter(
       <Route path='' element={<Layout />}>
         <Route path='login' element={<LoginForm />} />
         <Route path='register' element={<RegisterForm />} />
+        <Route path='register-company' element={<RegisterCompany />} />
+        <Route path='verify-company' element={<VerifyCompany />} />
       </Route>
       <Route path='/' element={<HomeLayout />}>
         <Route index element={<Home />}/>

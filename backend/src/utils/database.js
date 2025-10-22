@@ -162,6 +162,7 @@ const createTable = async() => {
                 no_of_staff INT DEFAULT 0,
                 no_of_admin INT DEFAULT 1,
                 plan ENUM('free', 'starter', 'enterprise') DEFAULT 'free',
+                created_by INT NULL,
                 tokens TEXT DEFAULT NULL,
                 address TEXT DEFAULT NULL,
                 timezoneFrom VARCHAR(50) DEFAULT NULL,
@@ -171,7 +172,8 @@ const createTable = async() => {
                 isVerified BOOLEAN DEFAULT FALSE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                deleted_at TIMESTAMP DEFAULT NULL
+                deleted_at TIMESTAMP DEFAULT NULL,
+                FOREIGN KEY (created_by) REFERENCES users(id)
             );`
             );
             console.log("companies table created successfully");

@@ -4,7 +4,7 @@ import { authenticateToken, authorizeRoles } from "../middlewares/auth.middlewar
 
 const router = express.Router();
 
-router.post("/register-company", authenticateToken, authorizeRoles("admin"), registerCompany);
+router.post("/register-company", registerCompany);
 router.post("/verify", verifyCompany);
 router.get("/company/:id", authenticateToken, getCompanyProfile);
 router.put("/company/:id", authenticateToken, authorizeRoles("admin"), updateCompany);
