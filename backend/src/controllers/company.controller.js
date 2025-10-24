@@ -19,15 +19,15 @@ export const registerCompany = asyncHandler(async (req, res) => {
     plan,
   } = req.body;
 
-  const adminId = req.user?.id;
-
-  if (!company_name || !company_email) {
-    throw new ApiError(400, "Company name and email are required");
-  }
 
   const connection = await pool.getConnection();
   try {
+
     await connection.beginTransaction();
+
+    if (!company_name || !company_email) {
+      throw new ApiError(400, "Company name and email are required");
+    }
 
     // check if email already exists
     const [existing] = await connection.query(
@@ -41,14 +41,26 @@ export const registerCompany = asyncHandler(async (req, res) => {
         .json(new ApiError(400, "Company already registered with this email"));
     }
 
+    const [users] = await connection.query(
+      `SELECT id FROM users ORDER BY created_at ASC LIMIT 1`
+    );
+
+    if (users.length === 0) {
+      return res 
+        .status(400)
+        .json(new ApiError(400, "No users found to assign as admin"));
+    }
+
+    const adminId = users[0].id;
+
     const otp = generateOTP();
     const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
     // insert company
     const [result] = await connection.query(
       `INSERT INTO companies 
-        (company_name, company_email, address, timezoneFrom, timezoneTo, no_of_staff, no_of_admin, plan, otp, otpExpiry, isVerified) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        (company_name, company_email, address, timezoneFrom, timezoneTo, no_of_staff, no_of_admin, plan, otp, otpExpiry, isVerified, created_by) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         company_name,
         company_email,
@@ -61,17 +73,16 @@ export const registerCompany = asyncHandler(async (req, res) => {
         otp,
         otpExpiry,
         false,
+        adminId,
       ]
     );
 
     const companyId = result.insertId;
 
-    if (adminId) {
-      await connection.query(
-        `UPDATE users SET company_id = ?, role = 'admin' WHERE id = ?`,
-        [companyId, adminId]
-      );
-    }
+    await connection.query(
+      `UPDATE users SET company_id = ?, role = 'admin' WHERE id = ?`,
+      [companyId, adminId]
+    );
 
     // send email with OTP
     const transporter = nodemailer.createTransport({
@@ -97,12 +108,14 @@ export const registerCompany = asyncHandler(async (req, res) => {
 
     return res
       .status(201)
-      .json(new ApiResponse(201, { companyId }, "Company registered. Verify OTP sent to email."));
+      .json(new ApiResponse(201, { companyId, adminId }, "Company registered. Verify OTP sent to email."));
+
   } catch (error) {
     await connection.rollback();
     return res
       .status(500)
       .json(new ApiError(500, error.message || "Failed to register company"));
+      
   } finally {
     connection.release();
   }

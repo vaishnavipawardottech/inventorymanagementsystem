@@ -37,9 +37,7 @@ function RegisterCompany() {
     setSuccess("");
 
     try {
-      const res = await axios.post("/api/v1/register-company", formData, {
-        withCredentials: true,
-      });
+      const res = await axios.post("/api/v1/register-company", formData);
       console.log("Company registered:", res.data);
       setSuccess("Company registered successfully! Check email for OTP.");
       setFormData({

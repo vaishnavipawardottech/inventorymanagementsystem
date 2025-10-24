@@ -310,15 +310,6 @@ function Company() {
                     placeholder="From"
                     className="w-1/3 border border-gray-300 rounded-md p-2 text-gray-700 focus:outline-none"
                   />
-                  <select
-                    name="timezoneAmPm"
-                    value={"AM"}
-                    onChange={handleChange}
-                    className="w-1/3 border border-gray-300 rounded-md p-2 text-gray-700 focus:outline-none"
-                  >
-                    <option value="AM">AM</option>
-                    <option value="PM">PM</option>
-                  </select>
                   
                   <input
                     type="text"
@@ -328,15 +319,6 @@ function Company() {
                     placeholder="To"
                     className="w-1/3 border border-gray-300 rounded-md p-2 text-gray-700 focus:outline-none"
                   />
-                  <select
-                    name="timezoneAmPm"
-                    value={editData.timezoneAmPm || "AM"}
-                    onChange={handleChange}
-                    className="w-1/3 border border-gray-300 rounded-md p-2 text-gray-700 focus:outline-none"
-                  >
-                    <option value="AM">AM</option>
-                    <option value="PM">PM</option>
-                  </select>
                 </div>
               )}
             </div>
