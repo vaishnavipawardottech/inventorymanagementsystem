@@ -115,7 +115,7 @@ export const registerCompany = asyncHandler(async (req, res) => {
     return res
       .status(500)
       .json(new ApiError(500, error.message || "Failed to register company"));
-      
+
   } finally {
     connection.release();
   }
@@ -161,29 +161,6 @@ export const verifyCompany = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, {}, "Company verified successfully"));
 });
-
-// export const getCompanyProfile = asyncHandler(async (req, res) => {
-//   const companyId = req.params.id || req.user?.company_id;
-
-//   if (!companyId) {
-//     throw new ApiError(400, "Company ID is required");
-//   }
-
-//   const [rows] = await pool.query(
-//     `SELECT id, company_name, company_email, no_of_staff, no_of_admin, plan, address, timezoneFrom, timezoneTo, isVerified, created_at 
-//      FROM companies 
-//      WHERE id = ? AND deleted_at IS NULL`,
-//     [companyId]
-//   );
-
-//   if (rows.length === 0) {
-//     throw new ApiError(404, "Company not found");
-//   }
-
-//   return res
-//     .status(200)
-//     .json(new ApiResponse(200, rows[0], "Company profile fetched successfully"));
-// });
 
 export const updateCompany = asyncHandler(async (req, res) => {
   const companyId = req.params.id || req.user?.company_id;
@@ -438,4 +415,35 @@ export const updateCompanyInfo = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(new ApiResponse(200, updated[0], "Company information fully updated successfully"));
+});
+
+export const getCompanyUsersByRole = asyncHandler(async (req, res) => {
+  const companyId = req.user?.company_id;
+  const { role } = req.params; // expected values: 'admin' or 'staff'
+
+  if (!companyId) {
+    throw new ApiError(400, "User is not associated with any company");
+  }
+
+  if (!role || !["admin", "staff"].includes(role)) {
+    throw new ApiError(400, "Invalid role. Must be 'admin' or 'staff'.");
+  }
+
+  const [users] = await pool.query(
+    `SELECT id, username, email, role, created_at
+     FROM users
+     WHERE company_id = ? AND role = ? AND deleted_at IS NULL
+     ORDER BY created_at ASC`,
+    [companyId, role]
+  );
+
+  if (users.length === 0) {
+    return res
+      .status(200)
+      .json(new ApiResponse(200, [], `No ${role}s found for this company`));
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, users, `${role}s fetched successfully`));
 });

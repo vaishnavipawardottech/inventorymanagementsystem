@@ -11,6 +11,9 @@ function Company() {
   const [editField, setEditField] = useState(null);
   const [editData, setEditData] = useState({});
   const [saving, setSaving] = useState(false);
+  const [showUsers, setShowUsers] = useState(false);
+  const [usersList, setUsersList] = useState([]);
+  const [selectedRole, setSelectedRole] = useState("");
 
   const fetchMyCompany = async () => {
     try {
@@ -40,6 +43,24 @@ function Company() {
       console.log("error to fetch profile: ", error);
     }
   }
+
+  const fetchUsersByRole = async (role) => {
+  try {
+    const res = await axios.get(`/api/v1/company/users/${role}`, {
+      withCredentials: true,
+    });
+
+    setUsersList(res.data.data || []);
+    setSelectedRole(role);
+    setShowUsers(true); 
+  } catch (error) {
+    console.log("Failed to fetch users by role:", error);
+    setUsersList([]);
+    setSelectedRole(role);
+    setShowUsers(true);
+  }
+};
+
 
   useEffect(() => {
     fetchMyCompany();
@@ -115,7 +136,7 @@ function Company() {
           <div className="space-y-4">
             <div className="flex justify-between items-center border-b border-gray-100 pb-2">
               <span className="text-gray-500 font-normal ml-5">Name</span>
-              <span className="text-gray-800 font-normal mr-11">
+              <span className="text-gray-800 font-normal">
                 {company.company_name}
               </span>
               <button className="cursor-pointer" onClick={() => handleEditClick("company_name")}>
@@ -135,7 +156,7 @@ function Company() {
 
             <div className="flex justify-between items-center border-b border-gray-100 pb-2">
               <span className="text-gray-500 font-normal ml-5">Plan</span>
-              <span className="text-gray-800 font-normal mr-25">
+              <span className="text-gray-800 font-normal">
                 {company.plan}
               </span>
               <button className="cursor-pointer" onClick={() => handleEditClick("plan")}>
@@ -143,9 +164,9 @@ function Company() {
               </button>
             </div>
 
-            <div className="flex justify-between items-center border-b border-gray-100 pb-2">
+            <div className="flex justify-start items-center border-b border-gray-100 pb-2">
               <span className="text-gray-500 font-normal ml-5">Status</span>
-              <span className="text-gray-800 font-normal mr-21">
+              <span className="text-gray-800 font-normal ml-115">
                 {company.isVerified ? (
                   <span className="text-green-600 font-medium">Verified</span>
                 ) : (
@@ -169,20 +190,20 @@ function Company() {
           <div className="space-y-4">
             <div className="flex justify-between items-center border-b border-gray-100 pb-2">
               <span className="text-gray-500 font-normal ml-5">Admins</span>
-              <span className="text-gray-800 font-normal mr-25">
+              <span className="text-gray-800 font-normal">
                 {company.no_of_admin}
               </span>
-              <button className="cursor-pointer">
+              <button className="cursor-pointer" onClick={() => fetchUsersByRole("admin")}>
                 <ChevronRight className="w-4 h-4 text-purple-700 mr-8" />
               </button>
             </div>
 
             <div className="flex justify-between items-center border-b border-gray-100 pb-2">
               <span className="text-gray-500 font-normal ml-5">Staff</span>
-              <span className="text-gray-800 font-normal mr-19">
+              <span className="text-gray-800 font-normal ml-5">
                 {company.no_of_staff}
               </span>
-              <button className="cursor-pointer">
+              <button className="cursor-pointer" onClick={() => fetchUsersByRole("staff")}>
                 <ChevronRight className="w-4 h-4 text-purple-700 mr-8" />
               </button>
             </div>
@@ -200,7 +221,7 @@ function Company() {
           <div className="flex flex-col gap-4">
             <div className="flex justify-between items-center border-b border-gray-100 pb-2">
               <span className="text-gray-500 font-normal ml-5">Address</span>
-              <span className="text-gray-800 font-normal mr-20">
+              <span className="text-gray-800 font-normal">
                 {company.address || "N/A"}
               </span>
               <button className="cursor-pointer" onClick={() => handleEditClick("address")}>
@@ -210,7 +231,7 @@ function Company() {
 
             <div className="flex justify-between items-center border-b border-gray-100 pb-2">
               <span className="text-gray-500 font-normal ml-5">Timezone</span>
-              <span className="text-gray-800 font-normal mr-28">
+              <span className="text-gray-800 font-normal">
                 {company.timezoneFrom && company.timezoneTo
                   ? `${company.timezoneFrom} - ${company.timezoneTo}`
                   : "N/A"}
@@ -342,8 +363,44 @@ function Company() {
         </div>
       )}
 
-    </div>
-  );
+      {showUsers && (
+      <div className="fixed inset-0 bg-gray-100 bg-opacity-40 flex items-center justify-center z-50">
+        <div className="bg-white relative rounded-lg shadow-lg p-6 w-full max-w-md">
+          <button
+            onClick={() => setShowUsers(false)}
+            className="absolute top-4 right-4 text-gray-600 hover:text-white hover:bg-red-500 p-1 rounded"
+          >
+            <X size={18} />
+          </button>
+
+          <h2 className="text-xl font-semibold text-gray-700 mb-4">
+            {selectedRole === "admin" ? "Admins" : "Staff"}
+          </h2>
+
+          {usersList.length > 0 ? (
+            <div className="space-y-3 max-h-80 overflow-y-auto">
+              {usersList.map((user) => (
+                <div
+                  key={user.id}
+                  className="flex justify-between items-center border-b border-gray-200 pb-2"
+                >
+                  <div>
+                    <p className="text-gray-800 font-medium">{user.username || "N/A"}</p>
+                    <p className="text-gray-500 text-sm">{user.email}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500 text-center">
+              No {selectedRole}s found for this company.
+            </p>
+          )}
+        </div>
+      </div>
+    )}
+  </div>
+);
 }
 
 export default Company;
