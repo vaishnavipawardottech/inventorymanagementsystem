@@ -46,16 +46,14 @@ function Sidebar() {
      }`;
 
   const handlePurchasesClick = () => {
-    setOpenPurchases((prev) => {
-      const newState = !prev;
+    const newState = !openPurchases;
+    setOpenPurchases(newState)
 
       // When dropdown opens, navigate to /drafts if not already there
       if (newState && !location.pathname.startsWith("/drafts")) {
         navigate("/drafts");
       }
 
-      return newState;
-    });
   };
 
   return (
@@ -121,51 +119,6 @@ function Sidebar() {
         </NavLink>
       </div>
 
-      {/* Company Modal */}
-      {/* {showCompanyModal && (
-        <div className="fixed inset-0 bg-gray-100 bg-opacity-60 flex items-center justify-center z-[9999]">
-          <div className="bg-white rounded-lg shadow-lg p-6 relative w-[90%] max-w-md border border-gray-200">
-            <button
-                onClick={() => setShowCompanyModal(false)}
-                className="absolute top-4 right-4 text-gray-600 hover:text-white hover:bg-red-500 p-1 rounded"
-              >
-                <X size={20} />
-              </button>
-            <h2 className="text-lg font-semibold mb-4 text-center">Add Company Details</h2>
-
-            <form className="flex flex-col gap-3">
-              <input
-                type="text"
-                placeholder="Company Name"
-                className="border border-gray-300 rounded-md p-2"
-              />
-              <input
-                type="text"
-                placeholder="Role"
-                className="border border-gray-300 rounded-md p-2"
-              />
-            </form>
-
-            <div className="flex justify-end gap-2 mt-4">
-              <button
-                onClick={() => setShowCompanyModal(false)}
-                className="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  // Backend will be connected later
-                  setShowCompanyModal(false);
-                }}
-                className="px-4 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )} */}
     </div>
   );
 }
