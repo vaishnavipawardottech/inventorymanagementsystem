@@ -31,6 +31,12 @@ export const createDraft = asyncHandler(async (req, res) => {
       );
     }
 
+    await logActivity(
+      created_by,
+      "CREATE_DRAFT",
+      `${req.user.username} created purchase draft for supplier ID ${supplier_id}`
+    );
+
     await connection.commit();
     res.status(201).json(new ApiResponse(201, { draftId }, "Draft created successfully"));
   } catch (error) {
@@ -215,6 +221,13 @@ export const sendDraft = asyncHandler(async (req, res) => {
     await transporter.sendMail(mailOptions);
 
     await pool.query(`UPDATE purchase_drafts SET status = 'ordered' WHERE id = ?`, [id]);
+
+    await logActivity(
+      req.user.id,
+      "SEND_ORDER",
+      `${req.user.username} sent purchase order to supplier '${supplier[0].name}' (Draft ID: ${id})`
+    );
+
 
     return res.status(200).json(new ApiResponse(200, {}, "Draft sent to supplier successfully"));
 });
@@ -436,6 +449,13 @@ export const markAsDelivered = asyncHandler(async (req, res) => {
       `UPDATE purchase_draft_items SET purchase_id = ? WHERE draft_id = ?`,
       [purchaseId, id]
     );
+
+    await logActivity(
+      req.user.id,
+      "MARK_DELIVERED",
+      `${req.user.username} marked delivery received from supplier '${id}' and updated stock`
+    );
+
 
     await connection.commit();
     res.status(200).json({ message: "Draft delivered and stock updated", purchaseId });

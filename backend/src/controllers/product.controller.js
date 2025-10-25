@@ -3,6 +3,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import {pool} from "../db/index.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { logActivity } from "../utils/logActivity.js";
 
 function getStockStatus(stock, min_stock) {
     stock = parseInt(stock);
@@ -49,6 +50,12 @@ export const addProduct = asyncHandler(async(req, res) => {
     const [result] = await pool.query(
         `Insert INTO products (name, category, price, stock, min_stock, image_url, stock_status) VALUES (?, ?, ?, ?, ?, ?, ?)`,
         [name, category || null, price, stock || 0, min_stock || 0, imageUrl, stockStatus]
+    );
+
+    await logActivity(
+        req.user.id,
+        "ADD_PRODUCT",
+        `${req.user.username} added new product '${name}' with price ₹${price}`
     );
 
     return res
@@ -156,6 +163,12 @@ export const updateProductById = asyncHandler(async(req, res) => {
         id
     ]
     )
+
+    await logActivity(
+        req.user.id,
+        "UPDATE_PRODUCT",
+        `${req.user.username} updated product '${existingProduct[0].name}'`
+    );
 
     return res
     .status(200)
