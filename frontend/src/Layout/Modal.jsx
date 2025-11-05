@@ -14,7 +14,7 @@ const Modal = ({ isOpen, onClose, title, children }) => {
           <X size={20} />
         </button>
 
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">{title}</h2>
+        <h2 className="text-lg font-semibold text-gray-800 mb-4 ml-4">{title}</h2>
         <div className="max-h-[70vh] overflow-y-auto">{children}</div>
       </div>
     </div>

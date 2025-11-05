@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Send, FileText, Loader2, X, Trash2, Save, Plus } from "lucide-react";
 import Modal from "../../Layout/Modal.jsx";
+import Pagination from "../../Layout/Pagination.jsx";
 
 function CreateDraft() {
   const [drafts, setDrafts] = useState([]);
@@ -9,12 +10,16 @@ function CreateDraft() {
   const [selectedDraft, setSelectedDraft] = useState(null);
   const [editableItems, setEditableItems] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [draftToDelete, setDraftToDelete] = useState(null);
   const [newDraft, setNewDraft] = useState({
     supplier_id: "",
     items: [{product_id: "", quantity: 1}],
   });
   const [suppliers, setSuppliers] = useState([]);
   const [products, setProducts] = useState([]);
+  const [page, setPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   const fetchDrafts = async () => {
     try {
@@ -48,6 +53,28 @@ function CreateDraft() {
     setEditableItems(updated);
   }
 
+  const handleAddProduct = () => {
+    const updated = [...editableItems];
+    updated.push({
+      product_id: "",
+      product_name: "",
+      quantity: 1,
+      price: 0
+    });
+    setEditableItems(updated);
+  }
+
+  const handleProductChange = (index, productId) => {
+    const updated = [...editableItems];
+    const selectedProduct = products.find(p => p.id === parseInt(productId));
+    if (selectedProduct) {
+      updated[index].product_id = selectedProduct.id;
+      updated[index].product_name = selectedProduct.name;
+      updated[index].price = selectedProduct.price;
+    }
+    setEditableItems(updated);
+  }
+
   const handleSaveChanges = async () => {
     try {
       await axios.put(`/api/v1/draft/${selectedDraft.id}`, {
@@ -60,6 +87,18 @@ function CreateDraft() {
       fetchDrafts();   
     } catch (error) {
       console.log("Failed to update draft: ", error);
+    }
+  }
+
+  const handleDeleteDraft = async () => {
+    try {
+      await axios.delete(`/api/v1/draft/${draftToDelete}`);
+      setShowDeleteConfirm(false);
+      setDraftToDelete(null);
+      setSelectedDraft(null);
+      fetchDrafts();
+    } catch (error) {
+      console.log("Failed to delete draft: ", error);
     }
   }
 
@@ -134,8 +173,9 @@ function CreateDraft() {
       ) : drafts.length === 0 ? (
         <p className="text-gray-500 text-center">No drafts found.</p>
       ) : (
-        <div className="flex flex-wrap gap-6 border-t border-gray-200 py-3 px-1 justify-start">
-          {drafts.map((draft) => (
+        <>
+          <div className="flex flex-wrap gap-6 border-t border-gray-200 py-3 px-1 justify-start">
+            {drafts.slice((page - 1) * rowsPerPage, page * rowsPerPage).map((draft) => (
             <div
               key={draft.id}
               className="relative flex flex-col justify-between bg-white shadow-md rounded-2xl p-5 border hover:shadow-lg transition w-full sm:w-[48%] lg:w-[31%]"
@@ -192,7 +232,24 @@ function CreateDraft() {
               </div>
             </div>
           ))}
-        </div>
+          </div>
+
+          {drafts.length > 6 && (
+            <div className="border-t border-gray-200 py-3 px-1">
+              <Pagination
+                currentPage={page}
+                totalPages={Math.ceil(drafts.length / rowsPerPage)}
+                onPageChange={(p) => setPage(p)}
+                rowsPerPage={rowsPerPage}
+                onRowsPerPageChange={(r) => {
+                  setRowsPerPage(r);
+                  setPage(1);
+                }}
+                totalItems={drafts.length}
+              />
+            </div>
+          )}
+        </>
       )}
 
       {/* Editable Modal */}
@@ -221,14 +278,31 @@ function CreateDraft() {
                     <th className="p-2 border">Product</th>
                     <th className="p-2 border w-24">Qty</th>
                     <th className="p-2 border">Price</th>
-                    <th className="p-2 border">Total</th>
+                    <th className="p-2 border">Estimated Cost</th>
                     <th className="p-2 border">Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {editableItems.map((p, i) => (
                     <tr key={i} className="border-b">
-                      <td className="p-2 border">{p.product_name}</td>
+                      <td className="p-2 border">
+                        {p.product_name ? (
+                          p.product_name
+                        ) : (
+                          <select
+                            value={p.product_id}
+                            onChange={(e) => handleProductChange(i, e.target.value)}
+                            className="w-full border rounded px-2 py-1 text-sm"
+                          >
+                            <option value="">Select Product</option>
+                            {products.map((product) => (
+                              <option key={product.id} value={product.id}>
+                                {product.name}
+                              </option>
+                            ))}
+                          </select>
+                        )}
+                      </td>
                       <td className="p-2 border">
                         <input
                           type="number"
@@ -257,8 +331,15 @@ function CreateDraft() {
                 </tbody>
               </table>
 
-              <div className="text-right mt-3 font-semibold">
-                Total: ₹
+              <button
+                onClick={handleAddProduct}
+                className="flex items-center gap-2 px-4 py-2 mt-4 rounded-md bg-blue-600 text-white hover:bg-blue-700 text-sm"
+              >
+                <Plus size={16} /> Add Product
+              </button>
+
+              <div className="text-right text-lg mt-3 mr-3 font-semibold">
+                Estimated Cost: ₹
                 {editableItems.reduce(
                   (sum, p) => sum + p.quantity * p.price,
                   0
@@ -266,6 +347,15 @@ function CreateDraft() {
               </div>
 
               <div className="flex justify-end mt-5">
+                <button
+                  onClick={() => {
+                    setDraftToDelete(selectedDraft.id);
+                    setShowDeleteConfirm(true);
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 mr-3"
+                >
+                  <Trash2 size={16} /> Delete Draft
+                </button>
                 <button
                   onClick={handleSaveChanges}
                   className="flex items-center gap-2 px-4 py-2 rounded-md bg-green-600 text-white hover:bg-green-700"
@@ -278,12 +368,43 @@ function CreateDraft() {
         )}
       </Modal>
 
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-gray-100 bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-md">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+              Confirm Delete
+            </h3>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete this draft? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  setDraftToDelete(null);
+                }}
+                className="px-4 py-2 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteDraft}
+                className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Modal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         title="Create Purchase Draft"
       >
-        <div className="bg-white p-6 rounded-lg shadow-md w-[90%] max-w-2xl mx-auto">
+        <div className="bg-white p-1 rounded-lg w-[90%] max-w-2xl mx-auto">
           <div className="space-y-4">
             {/* Supplier Selection */}
             <div>

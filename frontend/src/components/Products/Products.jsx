@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from 'react'
 import axios from 'axios'
-import { Plus, Pencil, Trash2, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Pencil, Trash2, ChevronDown, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import {saveAs} from 'file-saver';
 import ProductFormModal from '../ProductFormModal/ProductFormModal';
@@ -42,7 +42,6 @@ function Products() {
     { value: "out_of_stock", label: "Out of Stock" },
   ];
 
-
   const fetchProducts = async (pageNumber = 1, pageLimit = limit) => {
     setLoading(true);
     try {
@@ -53,58 +52,53 @@ function Products() {
           search: searchTerm || undefined,
           category: categoryFilter !== "all" ? categoryFilter : undefined,
           stock_status: stockFilter !== "all" ? stockFilter : undefined,
-        }
+        },
       });
 
-      const {products, totalProducts, totalPages, currentPage} = res.data.data;
+      const { products, totalProducts, totalPages, currentPage } = res.data.data;
       setProducts(products);
       setTotalProducts(totalProducts);
       setTotalPages(totalPages);
       setPage(currentPage);
-      
     } catch (error) {
       console.log("Error fetching products:", error);
     }
     setLoading(false);
-  }
+  };
 
   useEffect(() => {
     fetchProducts(page, limit);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, limit, searchTerm, categoryFilter, stockFilter]);
 
-   
-
-    const handleDelete = async (id) => {
-          try {
-            await axios.delete(`/api/v1/products/${id}`);
-            fetchProducts(page, limit);
-          } catch (error) {
-            console.log("Error deleting product:", error);
-          }
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`/api/v1/products/${id}`);
+      fetchProducts(page, limit);
+    } catch (error) {
+      console.log("Error deleting product:", error);
     }
+  };
 
-    const handleAddProduct = async (formData) => {
-      setLoading(true);
-      try {
-        const data = new FormData();
-        Object.entries(formData).forEach(([key, value]) => {
-          data.append(key, value);
-        })
+  const handleAddProduct = async (formData) => {
+    setLoading(true);
+    try {
+      const data = new FormData();
+      Object.entries(formData).forEach(([key, value]) => {
+        data.append(key, value);
+      });
 
-        await axios.post('/api/v1/add-product', data,
-           {withCredentials: true},
-           {headers: {'Content-Type': 'multipart/form-data'}}
-          );
-        setShowModal(false);
-        fetchProducts(page, limit);
-        setLoading(false);
-        
-      } catch (error) {
-        console.log("Error adding product:", error);
-        
-      }
+      await axios.post('/api/v1/add-product', data, {
+        withCredentials: true,
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setShowModal(false);
+      fetchProducts(page, limit);
+    } catch (error) {
+      console.log("Error adding product:", error);
     }
-
+    setLoading(false);
+  };
     const handleUpdateProduct = async (formData) => {
       if (!currentProduct) return;
       setLoading(true);
@@ -173,21 +167,24 @@ function Products() {
 
           {/* Filters */}
           <div className="flex flex-col md:flex-row gap-4 mb-3 justify-start">
-            <input
-              type="text"
-              placeholder="Search products..."
-              className="border border-gray-200 px-3 py-2 rounded-lg flex-1 w-full max-w-80"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+            <div className="relative flex-1 w-full max-w-80">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search products..."
+                className="border border-gray-200 pl-10 pr-3 py-2 rounded-lg w-full bg-white"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
 
             {/* stock status */}
             <div className='relative w-full max-w-56'>
               {/* Dropdown button */}
               <button
                 onClick={() => setOpen(!open)}
-                className="w-full flex justify-between items-center border p-2 rounded-full 
-                          cursor-pointer hover:bg-gray-100 transition"
+                className="w-full flex justify-between items-center border border-gray-200 p-2 rounded-lg 
+                          cursor-pointer bg-white hover:bg-gray-50 transition"
               >
                 <span>
                   {options.find((o) => o.value === stockFilter)?.label || "Stock Status"}
@@ -216,7 +213,7 @@ function Products() {
 
             <button
               onClick={handleDownload}
-              className="bg-purple-200 text-black px-4 py-2 ml-80 rounded-lg hover:bg-purple-300"
+              className="bg-white text-gray-700 px-4 py-2 ml-100 rounded-lg border border-gray-200 hover:bg-gray-50"
             >
               Download
             </button>
@@ -234,72 +231,66 @@ function Products() {
             {loading ? (
               <div>Loading...</div>
             ) : (
-              <div className="flex flex-wrap gap-6 mt-3">
+              <div className="flex flex-wrap gap-4 mt-3">
                 {products.map((product) => (
-                  <div
-                    key={product.id}
-                    className="flex flex-col w-[30%] bg-white shadow-md border-t border-gray-100 overflow-hidden relative group rounded-2xl hover:shadow"
-                  >
-                    {/* Image section */}
-                    <div className="relative flex-1 flex flex-col">
-                      <img
-                        src={product.image_url || "/vite.svg"}
-                        alt={product.name}
-                        className="w-full h-64 object-cover transition duration-300 group-hover:brightness-90"
-                      />
-
-                      {/* Info section (moved up) */}
-                      <div className="absolute bottom-0 w-full bg-purple-200 bg-opacity-90 px-3 py-2 flex justify-between items-center">
-                        <div>
-                          <h3 className="text-lg font-semibold text-black">{product.name}</h3>
-                          <p className="text-sm text-gray-800">{product.category || "-"}</p>
-                        </div>
-                        <p className="text-lg font-bold text-black mt-1">₹{product.price}</p>
+                  <div key={product.id} className="w-[calc(25%-12px)]">
+                    <div className="bg-white rounded-lg shadow-sm overflow-hidden relative hover:shadow-md transition-all h-96 flex flex-col">
+                      {/* Image - 70% */}
+                      <div className="relative h-[70%] bg-gray-100">
+                        <img
+                          src={product.image_url || "/vite.svg"}
+                          alt={product.name}
+                          className="w-full h-full object-cover transition duration-300"
+                        />
                       </div>
 
-                      {/* Hover Action Buttons */}
-                      <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition">
+                      {/* Remaining content - 30% */}
+                      <div className="h-[30%] flex flex-col justify-between bg-white relative">
+                        {/* Stock status - top right, flush with edges */}
+                        <span
+                          className={`absolute top-0 right-0 px-3 py-2 rounded-bl-lg text-xs font-medium ${
+                            product.stock_status === "in_stock"
+                              ? "bg-green-100 text-green-600"
+                              : product.stock_status === "low_stock"
+                              ? "bg-yellow-100 text-yellow-600"
+                              : "bg-red-100 text-red-600"
+                          }`}
+                        >
+                          {product.stock_status} ({product.stock})
+                        </span>
+
+                        {/* Edit button - bottom left */}
                         <button
                           onClick={() => {
                             setCurrentProduct(product);
                             setEditMode(true);
                             setShowModal(true);
                           }}
-                          className="bg-white p-2 rounded-full shadow hover:bg-gray-100"
+                          className="absolute bottom-2 left-2 text-xs text-gray-700 px-3 py-1 rounded bg-gray-100 hover:bg-gray-200"
                         >
-                          <Pencil size={18} className="text-blue-500" />
+                          Edit
                         </button>
+
+                        {/* Delete button - bottom right */}
                         <button
                           onClick={() => {
                             setProductToDelete(product.id);
                             setShowDeleteModal(true);
                           }}
-                          className="bg-white p-2 rounded-full shadow hover:bg-gray-100"
+                          className="absolute bottom-2 right-2 text-xs text-white px-3 py-1 rounded bg-red-600 hover:bg-red-700"
                         >
-                          <Trash2 size={18} className="text-red-500" />
+                          Delete
                         </button>
+
+                        <div className="px-4 pt-3 pb-2">
+                          <p className="text-xs text-gray-500 uppercase tracking-wide truncate">{product.category || '-'}</p>
+                          <h3 className="text-sm font-semibold text-gray-800 line-clamp-1">{product.name}</h3>
+                          <p className="text-md font-bold mt-1 text-gray-900">₹{product.price}</p>
+                          
+                        </div>
                       </div>
                     </div>
-
-                    {/* Stock bar (moved down) */}
-                    <div className="px-3 py-2 flex justify-between items-center border-t border-purple-300 bg-purple-200">
-                      <span className="text-sm text-gray-800">
-                        Stock: {product.stock}
-                      </span>
-                      <span
-                        className={`px-1 py-1 rounded text-xs font-medium ${
-                          product.stock_status === "in_stock"
-                            ? "bg-green-100 text-green-600"
-                            : product.stock_status === "low_stock"
-                            ? "bg-yellow-100 text-yellow-600"
-                            : "bg-red-100 text-red-600"
-                        }`}
-                      >
-                        {product.stock_status}
-                      </span>
-                    </div>
                   </div>
-
                 ))}
               </div>
             )}

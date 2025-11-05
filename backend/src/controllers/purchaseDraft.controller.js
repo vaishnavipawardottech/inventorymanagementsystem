@@ -549,6 +549,41 @@ export const updateDraft = asyncHandler(async (req, res) => {
   }
 });
 
+export const deleteDraft = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const connection = await pool.getConnection();
+
+  try {
+    await connection.beginTransaction();
+
+    // Check if draft exists and is still in 'draft' status
+    const [existing] = await connection.query(
+      `SELECT * FROM purchase_drafts WHERE id = ? AND status = 'draft' AND deleted_at IS NULL`,
+      [id]
+    );
+
+    if (existing.length === 0) {
+      throw new ApiError(404, "Draft not found or already sent");
+    }
+
+    // Soft delete the draft
+    await connection.query(
+      `UPDATE purchase_drafts SET deleted_at = NOW() WHERE id = ?`,
+      [id]
+    );
+
+    await connection.commit();
+
+    res.status(200).json(new ApiResponse(200, {}, "Draft deleted successfully"));
+  } catch (error) {
+    await connection.rollback();
+    throw new ApiError(500, error.message || "Failed to delete draft");
+  } finally {
+    connection.release();
+  }
+});
+
 export const updatePurchasePrice = asyncHandler(async (req, res) => {
   const { id: purchaseId } = req.params;
   const { items } = req.body; // [{ product_id, price }]
@@ -563,6 +598,12 @@ export const updatePurchasePrice = asyncHandler(async (req, res) => {
         [item.price, purchaseId, item.product_id]
       );
     }
+
+    // Mark the purchase as price_updated
+    await connection.query(
+      `UPDATE purchases SET price_updated = 1 WHERE id = ?`,
+      [purchaseId]
+    );
 
     await connection.commit();
     res.status(200).json({ message: "Purchase prices updated successfully" });
@@ -588,3 +629,20 @@ export const getPurchaseById = asyncHandler(async (req, res) => {
   res.status(200).json({ items });
 });
 
+// New function to check if purchase price is updated
+export const checkPriceUpdated = asyncHandler(async (req, res) => {
+  const { purchaseId } = req.params;
+
+  const [result] = await pool.query(
+    `SELECT price_updated FROM purchases WHERE id = ?`,
+    [purchaseId]
+  );
+
+  if (result.length === 0) {
+    return res.status(404).json({ message: "Purchase not found" });
+  }
+
+  res.status(200).json({ 
+    price_updated: result[0].price_updated === 1 
+  });
+});

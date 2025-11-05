@@ -3,7 +3,7 @@ import axios from "axios";
 import { Save, X } from "lucide-react";
 import Modal from "../Layout/Modal.jsx";
 
-function UpdatePurchasePrice({ purchaseId, onClose }) {
+function UpdatePurchasePrice({ purchaseId, onClose, onSuccess, isReadOnly = false }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -36,6 +36,7 @@ function UpdatePurchasePrice({ purchaseId, onClose }) {
         })),
         
       });
+      if (onSuccess) onSuccess();
       onClose();
     } catch (err) {
       console.error("Failed to update prices", err);
@@ -49,7 +50,7 @@ function UpdatePurchasePrice({ purchaseId, onClose }) {
   if (loading) return <p className="p-4 text-gray-500">Loading...</p>;
 
   return (
-    <Modal isOpen={!!purchaseId} onClose={onClose} title="Update Purchase Prices">
+    <Modal isOpen={!!purchaseId} onClose={onClose} title={isReadOnly ? "View Purchase Prices" : "Update Purchase Prices"}>
       <div className="relative bg-white p-4 rounded-xl  w-[90%] max-w-3xl mx-auto">
         {/* Close Button */}
         
@@ -72,13 +73,17 @@ function UpdatePurchasePrice({ purchaseId, onClose }) {
                     <td className="p-2 border">{item.product_name}</td>
                     <td className="p-2 border text-center">{item.quantity}</td>
                     <td className="p-2 border text-center">
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={item.price || ""}
-                        onChange={(e) => handlePriceChange(i, e.target.value)}
-                        className="w-24 border rounded px-2 py-1 text-center focus:outline-none focus:ring-1 focus:ring-green-400"
-                      />
+                      {isReadOnly ? (
+                        <span className="font-medium">₹{item.price}</span>
+                      ) : (
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={item.price || ""}
+                          onChange={(e) => handlePriceChange(i, e.target.value)}
+                          className="w-24 border rounded px-2 py-1 text-center focus:outline-none focus:ring-1 focus:ring-green-400"
+                        />
+                      )}
                     </td>
                     <td className="p-2 border text-right">
                       {(item.price * item.quantity).toFixed(2)}
@@ -96,15 +101,17 @@ function UpdatePurchasePrice({ purchaseId, onClose }) {
           </table>
         </div>
 
-        {/* Save Button */}
-        <div className="flex justify-end mt-5">
-          <button
-            onClick={handleSave}
-            className="flex items-center gap-2 px-5 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 shadow-sm"
-          >
-            <Save size={16} /> Save Changes
-          </button>
-        </div>
+        {/* Save Button - Only show if not read-only */}
+        {!isReadOnly && (
+          <div className="flex justify-end mt-5">
+            <button
+              onClick={handleSave}
+              className="flex items-center gap-2 px-5 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 shadow-sm"
+            >
+              <Save size={16} /> Save Changes
+            </button>
+          </div>
+        )}
       </div>
     </Modal>
   );

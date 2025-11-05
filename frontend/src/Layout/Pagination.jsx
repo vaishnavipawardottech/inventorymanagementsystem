@@ -27,7 +27,7 @@ function Pagination({
   };
 
   return (
-    <div className="flex justify-end items-center mt-6 text-sm text-gray-700">
+    <div className="flex justify-end items-center mt-6 text-sm text-gray-700 mr-9">
       {/* Pagination Container */}
       <div className="flex items-center gap-4 bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
         
@@ -46,7 +46,7 @@ function Pagination({
         </div>
 
         {/* Range display */}
-        <span className="text-gray-600 min-w-[120px] text-right">
+        <span className="text-gray-600 min-w-[63px] text-right">
           {validTotalItems === 0
             ? "0-0 of 0"
             : `${startItem}-${endItem} of ${validTotalItems}`}

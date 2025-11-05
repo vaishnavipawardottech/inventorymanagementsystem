@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from 'react'
 import axios from "axios";
-import { Plus, Edit, Trash2, Info } from 'lucide-react';
+import { Plus, Edit, Trash2, Info, Search } from 'lucide-react';
 import SupplierForm from '../SupplierForm/SupplierForm';
 
 function Suppliers() {
@@ -50,13 +50,17 @@ function Suppliers() {
 
       {/* Search */}
       <div className="mb-3 flex flex-row items-center justify-between">
-        <input
+        <div className='relative flex-1 w-full max-w-80'>
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <input
           type="text"
           placeholder="Search suppliers..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-1/3 px-3 py-2 border rounded-lg shadow-sm  border-gray-200"
+          className="w-70 px-3 pl-10 py-2 border rounded-lg shadow-sm  border-gray-200 bg-white"
         />
+        </div>
+        
         <button
           onClick={() => {
             setEditingSupplier(null);

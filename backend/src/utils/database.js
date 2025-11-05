@@ -70,6 +70,7 @@ const createTable = async() => {
                 supplier_id INT NOT NULL,
                 created_by INT,
                 total_amount DECIMAL(12, 2) DEFAULT 0,
+                price_updated TINYINT(1) DEFAULT 0,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 FOREIGN KEY (supplier_id) REFERENCES suppliers(id),

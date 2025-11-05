@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from 'react'
 import axios from 'axios'
-import {X, Plus, Info} from 'lucide-react'
+import {X, Plus, Info, Trash2} from 'lucide-react'
 import BillFromModal from '../BillFormModal/BillFromModal';
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -9,6 +9,7 @@ function Sales() {
     const [sales, setSales] = useState([]);
     const [selectedSale, setSelectedSale] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [showOrder, setShowOrder] = useState(false);
     const [billSale, setBillSale] = useState(null);
 
@@ -100,6 +101,22 @@ function Sales() {
     doc.text("Thank you for your purchase!", 105, finalY + 20, { align: "center" });
 
     doc.save(`Invoice_${sale.id}.pdf`);
+  };
+
+  const handleDeleteSale = async () => {
+    try {
+      setLoading(true);
+      await axios.delete(`/api/v1/order/${selectedSale.id}`);
+      alert('Sale deleted successfully');
+      setShowDeleteConfirm(false);
+      setSelectedSale(null);
+      fetchSales(); // Refresh the sales list
+    } catch (error) {
+      console.error('Error deleting sale:', error);
+      alert('Failed to delete sale');
+    } finally {
+      setLoading(false);
+    }
   };
 
 
@@ -226,10 +243,14 @@ function Sales() {
               </div>
             </div>
 
-              {/* Created By at bottom-right */}
-              <p className="absolute bottom-4 left-6 text-xs text-gray-500">
-                Created By: {selectedSale.created_by}
-              </p>
+              {/* Delete Sale Button at bottom-left */}
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="absolute bottom-4 left-6 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+              >
+                <Trash2 size={16} />
+                Delete Sale
+              </button>
             
             
           </div>
@@ -290,6 +311,31 @@ function Sales() {
             >
               Download Bill
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+            <h2 className="text-xl font-bold mb-4">Confirm Delete</h2>
+            <p className="mb-6">Are you sure you want to delete this sale? This action cannot be undone.</p>
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="px-4 py-2 bg-gray-300 hover:bg-gray-400 rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteSale}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg flex items-center gap-2"
+              >
+                <Trash2 size={16} />
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       )}

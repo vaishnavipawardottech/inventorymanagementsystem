@@ -3,14 +3,21 @@ import axios from "axios";
 import { Loader2, Eye, X, FileText, CircleCheckBig, ChevronDown } from "lucide-react";
 import Modal from "../../Layout/Modal.jsx";
 import UpdatePurchasePrice from "../../Layout/UpdatePurchasePrice.jsx";
+import Pagination from "../../Layout/Pagination.jsx";
 
 function SeeOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [updatePurchaseId, setUpdatePurchaseId] = useState(null);
+  const [viewPricesId, setViewPricesId] = useState(null);
   const [open, setOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState("all");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
+  const [priceUpdatedStatus, setPriceUpdatedStatus] = useState({});
 
   const options = [
     { value: "all", label: "Status" },
@@ -21,12 +28,38 @@ function SeeOrders() {
   const fetchOrders = async () => {
     try {
       const res = await axios.get("/api/v1/ordered");
-      setOrders(res.data.data);
+      const ordersData = res.data.data;
+      setOrders(ordersData);
+      
+      // Fetch price_updated status for each delivered order
+      const statusPromises = ordersData
+        .filter(order => order.status === 'delivered' && order.purchase_id)
+        .map(async (order) => {
+          try {
+            const statusRes = await axios.get(`/api/v1/check-price-updated/${order.purchase_id}`);
+            return { purchaseId: order.purchase_id, priceUpdated: statusRes.data.price_updated };
+          } catch (err) {
+            console.error(`Error checking price status for purchase ${order.purchase_id}:`, err);
+            return { purchaseId: order.purchase_id, priceUpdated: false };
+          }
+        });
+      
+      const statusResults = await Promise.all(statusPromises);
+      const statusMap = {};
+      statusResults.forEach(({ purchaseId, priceUpdated }) => {
+        statusMap[purchaseId] = priceUpdated;
+      });
+      setPriceUpdatedStatus(statusMap);
+      
     } catch (error) {
       console.error("Error fetching purchases:", error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePriceUpdate = () => {
+    fetchOrders();
   };
 
   useEffect(() => {
@@ -44,8 +77,8 @@ function SeeOrders() {
         <div className="relative w-full max-w-56">
           <button
             onClick={() => setOpen(!open)}
-            className="w-full flex justify-between items-center border p-2 rounded-full 
-                          cursor-pointer hover:bg-gray-100 transition"
+            className="w-full flex justify-between items-center border border-gray-200 p-2 rounded-lg 
+                          cursor-pointer bg-white hover:bg-gray-50 transition"
           >
             <span>
               {options.find((option) => option.value === statusFilter)?.label || "Status"}
@@ -88,8 +121,9 @@ function SeeOrders() {
           return filteredOrders.length === 0 ? (
             <p className="text-gray-500 text-center">No orders found.</p>
           ) : (
-            <div className="flex flex-wrap gap-6 border-t border-gray-200 py-3 px-1 justify-start">
-              {filteredOrders.map((order) => (
+            <>
+              <div className="flex flex-wrap gap-6 border-t border-gray-200 py-3 px-1 justify-start">
+                {filteredOrders.slice((page - 1) * rowsPerPage, page * rowsPerPage).map((order) => (
                 <div
                   key={order.id}
                   className="relative flex flex-col justify-between bg-white shadow-md rounded-2xl p-5 border hover:shadow-lg transition w-full sm:w-[48%] lg:w-[31%]"
@@ -155,17 +189,45 @@ function SeeOrders() {
                     )}
 
                     {order.status === "delivered" && (
-                      <button
-                        onClick={() => setUpdatePurchaseId(order.purchase_id)}
-                        className="flex items-center gap-2 px-3 py-2 rounded-md bg-green-600 text-white text-sm font-medium hover:bg-green-700"
-                      >
-                        <FileText size={16} /> Update Prices
-                      </button>
+                      <>
+                        {priceUpdatedStatus[order.purchase_id] ? (
+                          <button
+                            onClick={() => setViewPricesId(order.purchase_id)}
+                            className="flex items-center gap-2 px-3 py-2 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+                          >
+                            <Eye size={16} /> Price Updated
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => setUpdatePurchaseId(order.purchase_id)}
+                            className="flex items-center gap-2 px-3 py-2 rounded-md bg-green-600 text-white text-sm font-medium hover:bg-green-700"
+                          >
+                            <FileText size={16} /> Update Prices
+                          </button>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
               ))}
-            </div>
+              </div>
+              
+              {filteredOrders.length > 6 && (
+                <div className="border-t border-gray-200 py-3 px-1">
+                  <Pagination
+                    currentPage={page}
+                    totalPages={Math.ceil(filteredOrders.length / rowsPerPage)}
+                    onPageChange={(p) => setPage(p)}
+                    rowsPerPage={rowsPerPage}
+                    onRowsPerPageChange={(r) => {
+                      setRowsPerPage(r);
+                      setPage(1);
+                    }}
+                    totalItems={filteredOrders.length}
+                  />
+                </div>
+              )}
+            </>
           );
         })()
       )}
@@ -235,6 +297,16 @@ function SeeOrders() {
         <UpdatePurchasePrice
           purchaseId={updatePurchaseId}
           onClose={() => setUpdatePurchaseId(null)}
+          onSuccess={handlePriceUpdate}
+          isReadOnly={false}
+        />
+      )}
+
+      {viewPricesId && (
+        <UpdatePurchasePrice
+          purchaseId={viewPricesId}
+          onClose={() => setViewPricesId(null)}
+          isReadOnly={true}
         />
       )}
     </div>

@@ -129,7 +129,7 @@ const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep
 export const getDashboardTrends = asyncHandler(async (req, res) => {
   const selectedYear = req.query.year || new Date().getFullYear();
 
-  // 1️⃣ Stock Movements (Incoming vs Outgoing)
+  // Stock Movements (Incoming vs Outgoing)
   const [stockMovements] = await pool.query(
     `
     WITH months AS (
@@ -163,7 +163,7 @@ export const getDashboardTrends = asyncHandler(async (req, res) => {
     [selectedYear, selectedYear]
   );
 
-  // 2️⃣ Stock Value
+  // Stock Value
   const [stockValueResult] = await pool.query(`
     SELECT 
       SUM(price * stock) AS total_stock_value,
@@ -179,7 +179,7 @@ export const getDashboardTrends = asyncHandler(async (req, res) => {
     total_quantity: stockValueResult[0].total_quantity || 0,
   };
 
-  // 3️⃣ Top 5 Outgoing Products (with price, stock, status)
+  // Top 5 Outgoing Products (with price, stock, status)
   const [topOutgoing] = await pool.query(`
     SELECT 
       p.name AS product_name,
@@ -195,7 +195,7 @@ export const getDashboardTrends = asyncHandler(async (req, res) => {
     LIMIT 5;
   `);
 
-  // ✅ Send all trends data
+  // Send all trends data
   res.status(200).json(
     new ApiResponse(200, {
       year: selectedYear,

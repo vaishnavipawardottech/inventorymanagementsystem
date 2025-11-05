@@ -3,7 +3,7 @@ import axios from "axios";
 import DashboardStatsCard from "../../Layout/DashboardStatsCard.jsx"
 import Pagination from "../../Layout/Pagination.jsx";
 import TrendsChart from "../../Layout/TrendsChart.jsx";
-import { Loader2, DollarSign, Package, VectorSquare, Tag, Layers, CheckCircle, AlertTriangle, XCircle } from "lucide-react";
+import { Loader2, DollarSign, Package, VectorSquare, Tag, Layers, CheckCircle, AlertTriangle, XCircle, TrendingUp } from "lucide-react";
 
 function Dashboard() {
   const [stats, setStats] = useState(null);
@@ -110,7 +110,7 @@ function Dashboard() {
       </div>
 
       {/* sections */}
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-6 max-w-[1100px]">
         <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100">
           {/* Trends Section */}
           <div className="flex flex-col gap-6">
@@ -125,18 +125,18 @@ function Dashboard() {
 
 
             {/* Current Stock Value */}
-            <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100">
+            <div className="bg-gray-50 rounded-2xl shadow-md p-6 border border-gray-100">
               <h2 className="text-lg font-semibold text-gray-800 mb-7">
                 Current Stock Value
               </h2>
               <div className="flex justify-between items-center">
               {/* Total Stock Value */}
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-purple-100 rounded-full">
-                  <DollarSign className="w-6 h-6 text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-gray-700 font-medium">Total Stock Value</p>
+              <div className="flex flex-col">
+                <p className="text-gray-700 font-medium mb-2">Total Stock Value</p>
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-purple-100 rounded-full">
+                    <DollarSign className="w-6 h-6 text-purple-600" />
+                  </div>
                   <p className="text-2xl font-bold text-gray-800">
                     ₹ {trends.stockValue?.total_value || 0}
                   </p>
@@ -144,12 +144,12 @@ function Dashboard() {
               </div>
 
               {/* Total Products */}
-              <div className="flex items-center space-x-3 mr-10">
-                <div className="p-2 bg-purple-100 rounded-full">
-                  <Package className="w-6 h-6 text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-gray-700 font-medium">Total Products</p>
+              <div className="flex flex-col">
+                <p className="text-gray-700 font-medium mb-2">Total Products</p>
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-purple-100 rounded-full">
+                    <Package className="w-6 h-6 text-purple-600" />
+                  </div>
                   <p className="text-2xl font-bold text-gray-800">
                     {trends.stockValue?.total_products || 0}
                   </p>
@@ -157,12 +157,12 @@ function Dashboard() {
               </div>
 
               {/* Total Product Quantity */}
-              <div className="flex items-center space-x-3 mr-10">
-                <div className="p-2 bg-purple-100 rounded-full">
-                  <VectorSquare className="w-6 h-6 text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-gray-700 font-medium">Total Product Quantity</p>
+              <div className="flex flex-col mr-55">
+                <p className="text-gray-700 font-medium mb-2">Total Product Quantity</p>
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-purple-100 rounded-full">
+                    <Layers className="w-6 h-6 text-purple-600" />
+                  </div>
                   <p className="text-2xl font-bold text-gray-800">
                     {trends.stockValue?.total_quantity || 0}
                   </p>
@@ -173,17 +173,17 @@ function Dashboard() {
             </div>
 
             {/* Top 5 Outgoing Products */}
-            <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100">
+            <div className="bg-gray-50 rounded-2xl shadow-md p-6 border border-gray-100">
               <h2 className="text-lg font-semibold text-gray-800 mb-6">
                 Top 5 Outgoing Products (High Demand)
               </h2>
 
               {trends.topOutgoing && trends.topOutgoing.length > 0 ? (
-                <div className="flex gap-5 overflow-x-auto pb-2">
+                <div className="flex flex-wrap gap-5 justify-start">
                   {trends.topOutgoing.map((item, index) => (
                     <div
                       key={index}
-                      className="flex flex-col justify-between bg-gray-50 border border-gray-200 rounded-md shadow-sm p-4 w-[220px] hover:shadow-md"
+                      className="flex flex-col justify-between bg-white border border-purple-200 rounded-md shadow-sm p-4 w-[220px] hover:shadow-md"
                     >
                       {/* Product Header */}
                       <div className="flex flex-row items-center justify-center mb-6">
@@ -234,7 +234,7 @@ function Dashboard() {
                       {/* Footer (Total Sold) */}
                       <div className="mt-4 flex items-center justify-between border-t pt-3 text-sm">
                         <span className="text-gray-600 font-medium">Total Sold:</span>
-                        <span className="text-purple-600 font-semibold">
+                        <span className="text-gray-800 font-semibold">
                           {item.total_sold} units
                         </span>
                       </div>
