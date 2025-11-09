@@ -234,7 +234,7 @@ function CreateDraft() {
           ))}
           </div>
 
-          {drafts.length > 6 && (
+          {drafts.length > 5 && (
             <div className="border-t border-gray-200 py-3 px-1">
               <Pagination
                 currentPage={page}

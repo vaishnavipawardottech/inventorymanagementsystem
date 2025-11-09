@@ -122,12 +122,12 @@ export const registerUser = asyncHandler(async (req, res) => {
       }
 
       companyId = companyRows[0].id;
-    } else if (!isCompanyMember && !companyExists && isFirstUser) {
-      // This is the first ever user and no company exists
-      // They will register successfully but need to register a company afterward
+    } else if (isFirstUser) {
+      // This is the first ever user - allow them to proceed without company selection
+      // They will register a company afterward
       companyId = null;
     } else if (!isCompanyMember && companyExists) {
-      // If companies exist but user didn’t choose one
+      // If companies exist but user didn't choose one (and it's NOT the first user)
       throw new ApiError(400, "Please select a company or mark yourself as a company member");
     }
 
@@ -331,3 +331,20 @@ export const getProfile = asyncHandler(async (req, res) => {
             .json({success: false, message: "Server error"})
     }
 })
+
+// Check if any users exist in the system (for first user check)
+export const checkUsersExist = asyncHandler(async (req, res) => {
+    try {
+        const [countRows] = await pool.query("SELECT COUNT(*) as count FROM users");
+        const usersExist = countRows[0].count > 0;
+
+        return res
+            .status(200)
+            .json(new ApiResponse(200, { usersExist }, "User existence check completed"));
+    } catch (error) {
+        console.log("Error checking users existence: ", error);
+        return res
+            .status(500)
+            .json(new ApiError(500, "Failed to check user existence"));
+    }
+});

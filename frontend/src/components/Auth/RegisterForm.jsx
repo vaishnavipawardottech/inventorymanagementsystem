@@ -19,19 +19,28 @@ function RegisterForm() {
   const [success, setSuccess] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false); // New state for Role dropdown
+  const [isFirstUser, setIsFirstUser] = useState(false); // Track if this is the first user
   const navigate = useNavigate();
 
-  // Fetch companies from backend
+  // Fetch companies from backend and check if users exist
   useEffect(() => {
-    const fetchCompanies = async () => {
+    const fetchData = async () => {
       try {
-        const res = await axios.get("/api/v1/companies", { withCredentials: true });
-        setCompanies(res.data.data || []);
+        // Check if any users exist
+        const userCheckRes = await axios.get("/api/v1/check-users-exist");
+        const usersExist = userCheckRes.data?.data?.usersExist || false;
+        setIsFirstUser(!usersExist);
+
+        // Fetch companies only if users already exist (not first user)
+        if (usersExist) {
+          const companiesRes = await axios.get("/api/v1/companies", { withCredentials: true });
+          setCompanies(companiesRes.data.data || []);
+        }
       } catch (error) {
-        console.error("Error fetching companies:", error);
+        console.error("Error fetching data:", error);
       }
     };
-    fetchCompanies();
+    fetchData();
   }, []);
 
   const handleChange = (e) => {
@@ -135,56 +144,73 @@ function RegisterForm() {
             />
           </div>
 
-          {/* Role Dropdown */}
-          <div className="relative w-full mb-4">
-            <div
-              onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
-              className="flex items-center justify-between bg-blue-100 text-gray-700 p-3 rounded-lg cursor-pointer hover:bg-blue-200 transition"
-            >
-              <div className="flex items-center">
-                {/* <Briefcase className="w-5 h-5 mr-2 text-gray-500" /> */}
-                <span>{formData.role ? formData.role.charAt(0).toUpperCase() + formData.role.slice(1) : "Select Role"}</span>
+          {/* Role Dropdown - For existing users */}
+          {!isFirstUser && (
+            <div className="relative w-full mb-4">
+              <div
+                onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
+                className="flex items-center justify-between bg-blue-100 text-gray-700 p-3 rounded-lg cursor-pointer hover:bg-blue-200 transition"
+              >
+                <div className="flex items-center">
+                  {/* <Briefcase className="w-5 h-5 mr-2 text-gray-500" /> */}
+                  <span>{formData.role ? formData.role.charAt(0).toUpperCase() + formData.role.slice(1) : "Select Role"}</span>
+                </div>
+                <ChevronDown
+                  className={`w-5 h-5 text-gray-600 transform transition-transform ${
+                    isRoleDropdownOpen ? "rotate-180" : ""
+                  }`}
+                />
               </div>
-              <ChevronDown
-                className={`w-5 h-5 text-gray-600 transform transition-transform ${
-                  isRoleDropdownOpen ? "rotate-180" : ""
-                }`}
+
+              {isRoleDropdownOpen && (
+                <div className="absolute z-10 w-full bg-white border border-gray-200 rounded-lg shadow-md mt-1 overflow-y-auto max-h-48">
+                  {["admin", "staff"].map((roleOption) => (
+                    <div
+                      key={roleOption}
+                      onClick={() => handleSelectRole(roleOption)}
+                      className={`px-4 py-2 text-gray-700 cursor-pointer hover:bg-indigo-100 ${
+                        formData.role === roleOption ? "bg-indigo-50 font-medium" : ""
+                      }`}
+                    >
+                      {roleOption.charAt(0).toUpperCase() + roleOption.slice(1)}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Role Input - For first user (admin by default) */}
+          {isFirstUser && (
+            <div className="flex items-center bg-blue-100 text-gray-700 mb-4 p-3 rounded-lg w-full">
+              <input
+                className="bg-blue-100 text-gray-700 w-full outline-none"
+                type="text"
+                value="Admin"
+                disabled
+                readOnly
               />
             </div>
+          )}
 
-            {isRoleDropdownOpen && (
-              <div className="absolute z-10 w-full bg-white border border-gray-200 rounded-lg shadow-md mt-1 overflow-y-auto max-h-48">
-                {["admin", "staff"].map((roleOption) => (
-                  <div
-                    key={roleOption}
-                    onClick={() => handleSelectRole(roleOption)}
-                    className={`px-4 py-2 text-gray-700 cursor-pointer hover:bg-indigo-100 ${
-                      formData.role === roleOption ? "bg-indigo-50 font-medium" : ""
-                    }`}
-                  >
-                    {roleOption.charAt(0).toUpperCase() + roleOption.slice(1)}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          {/* Company Membership Checkbox - Only show if not the first user */}
+          {!isFirstUser && (
+            <div className="flex items-center justify-between w-full mb-4 ml-1">
+              <label className="flex items-center space-x-2 text-gray-700">
+                <input
+                  type="checkbox"
+                  name="isCompanyMember"
+                  checked={formData.isCompanyMember}
+                  onChange={handleChange}
+                  className="w-4 h-4 accent-indigo-600"
+                />
+                <span>Are you a member of any company?</span>
+              </label>
+            </div>
+          )}
 
-          {/* Company Membership Checkbox */}
-          <div className="flex items-center justify-between w-full mb-4 ml-1">
-            <label className="flex items-center space-x-2 text-gray-700">
-              <input
-                type="checkbox"
-                name="isCompanyMember"
-                checked={formData.isCompanyMember}
-                onChange={handleChange}
-                className="w-4 h-4 accent-indigo-600"
-              />
-              <span>Are you a member of any company?</span>
-            </label>
-          </div>
-
-          {/* Company Dropdown */}
-          {formData.isCompanyMember && (
+          {/* Company Dropdown - Only show if not the first user and checkbox is checked */}
+          {!isFirstUser && formData.isCompanyMember && (
             <div className="relative w-full mb-4">
               <div
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}

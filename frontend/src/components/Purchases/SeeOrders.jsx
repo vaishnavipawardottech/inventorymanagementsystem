@@ -212,7 +212,7 @@ function SeeOrders() {
               ))}
               </div>
               
-              {filteredOrders.length > 6 && (
+              {filteredOrders.length > 5 && (
                 <div className="border-t border-gray-200 py-3 px-1">
                   <Pagination
                     currentPage={page}

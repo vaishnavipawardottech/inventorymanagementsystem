@@ -9,10 +9,12 @@ function LoginForm() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleLogin = async(e) => {
     e.preventDefault();
+    setError('');
 
     try {
       const response = await axios.post('/api/v1/login', {email, password}, { withCredentials: true });
@@ -33,6 +35,8 @@ function LoginForm() {
       }
     } catch (error) {
       console.log("Error logging in: ", error);
+      const errormsg = error.response?.data?.message || "Invalid email or password";
+      setError(errormsg);
     }
   }
 
@@ -71,6 +75,9 @@ function LoginForm() {
 
                         <Button type='submit'>Login</Button>
                     
+                    {/* Error Message */}
+                    {error && <p className="text-red-600 text-sm mt-3">{error}</p>}
+
                     <p className='text-gray-600 text-sm mt-6 text-center'>Don't have an account? 
                          <a className='text-indigo-700 underline ml-2' href="/register">
                             Register

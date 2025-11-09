@@ -216,7 +216,7 @@ function Dashboard() {
                             <span>Status</span>
                           </div>
 
-                          {/* Stock Status Badge */}
+                          {/* Stock Status Badge with stock number */}
                           <span
                             className={`px-2 py-1 text-xs font-semibold rounded-full ${
                               item.stock_status === "in_stock"
@@ -226,7 +226,7 @@ function Dashboard() {
                                 : "bg-red-100 text-red-700"
                             }`}
                           >
-                            {item.stock_status?.replace("_", " ") || "N/A"}
+                            {item.stock_status?.replace("_", " ") || "N/A"} ({item.stock || 0})
                           </span>
                         </div>
                       </div>
@@ -284,7 +284,8 @@ function Dashboard() {
         </div>
 
         {/* Custom Pagination */}
-        <Pagination
+        <div className="ml-60">
+          <Pagination
           currentPage={page}
           totalPages={totalPages}
           onPageChange={(p) => setPage(p)}
@@ -295,6 +296,7 @@ function Dashboard() {
           }}
           totalItems={totalItems}
         />
+        </div>
       </div>
       </div>
     </div>
