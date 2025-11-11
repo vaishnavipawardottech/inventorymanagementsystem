@@ -3,14 +3,6 @@ import jwt from "jsonwebtoken";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const authenticateToken = (req, res, next) => {
-    // const authHeader = req.headers['authorization'];
-    // const token = authHeader && authHeader.split(' ')[1];
-
-    // if (!token) {
-    //     return res
-    //         .status(401)
-    //         .json(new ApiError(401, "Authentication token is required"));
-    // }
 
     try {
         const token = req.cookies.accessToken;
